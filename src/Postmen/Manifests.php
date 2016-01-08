@@ -5,15 +5,15 @@ namespace Postmen;
 use Exception;
 
 /**
- * Class Labels
+ * Class Manifests
  *
  * @package Postmen
  */
-class Labels extends Handler
+class Manifests extends Handler
 {
 	public function create($fields, $options = array())  {
-		$required = array('paper_size', 'service_type', 'is_document', 'shipper_account', 'shipment');
-		$accepted = array('async', 'return_shipment', 'ship_date', 'service_options', 'invoice', 'reference', 'billing', 'customs');
+		$required = array('shipper_account');
+		$accepted = array('async');
 		$accepted = array_merge($accepted, $required);
 		$request = array();
 		foreach ($required as $key => $value) {
@@ -28,15 +28,15 @@ class Labels extends Handler
 				$request[$key] = $value;
 			}
 		}
-		return $this->POST('/v3/labels', $request, $options);
+		return $this->POST('/v3/manifests', $request, $options);
 	}
 
 	public function retreive($id, $options = array()) {
-		return $this->GET("/v3/labels/$id", $options);
+		return $this->GET("/v3/manifests/$id", $options);
 	}
 
-	public function list_labels($fields, $options = array()) {
-		$accepted = array('shipper_account_id', 'status', 'limit', 'created_at_min', 'created_at_max', 'tracking_numbers', 'next_token');
+	public function list_manifests($fields, $options = array()) {
+		$accepted = array('shipper_account_id', 'status', 'limit', 'created_at_min', 'created_at_max', 'next_token');
 		$request = array();
 		foreach ($fields as $key => $value) {
 			if (!in_array($key, $accepted)) {
@@ -45,6 +45,6 @@ class Labels extends Handler
 				$request[$key] = $value;
 			}
 		}
-		return $this->POST('/v3/labels', $request, $options);
+		return $this->POST('/v3/manifests', $request, $options);
 	}
 }

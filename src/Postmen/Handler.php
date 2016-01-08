@@ -2,7 +2,9 @@
 
 namespace Postmen;
 
-use Exception;
+require('PostmenException.php');
+
+use Postmen\PostmenException;
 
 /**
  * Class Handler
@@ -15,12 +17,14 @@ class Handler
 	private $_url;
 	private $_config;
 	private $_version;
+	private $_error;
 
 	public function __construct($api_key, array $config)
 	{
 		if (!isset($api_key)) {
-			throw new Exception('api_key is required field and must be defined');
+			throw new PostmenException('required argument is unset', 201, false);
 		}
+		$this->_error = undefined;
 		$this->_version = "0.0.1";
 		$this->_api_key = $api_key;
 		$fields = array(
@@ -35,12 +39,16 @@ class Handler
 			$$key = isset($config[$key]) ? $config[$key] : $default;
 		}
 		if ($config['region'] == undefined) {
-			throw new Exception('region is required field and must be defined');
+			throw new PostmenException('missing required field', 200, false);
 		}
 		$this->_config = $fields;
 	}
 
 	public function call($method, $path, $parameters = array()) {
+		$safe = false;
+		if (isset($parameters['safe'])) {
+			$safe = $parameters['safe'];
+		}
 		$body = $parameters['body'];
 		if (!is_string($body)) {
 			$body = json_encode($body);
@@ -70,8 +78,26 @@ class Handler
 		$response = curl_exec($curl);
 		$err = curl_error($curl);
 		if ($err) {
-			echo $err; // TODO throw exception
-		}		
+			$error = new PostmenException("failed to request: $err" , 100, true);
+			if ($safe) {
+				$this->_error = $error;
+				return undefined;
+			} else {
+				throw $error;
+			}
+		}
+		$info = curl_getinfo($curl);
+		$code = $info['http_code'];
+		if ($code != 200) {
+			$error =  new PostmenException("http response error: $code" , 101, true);
+			if ($safe) {
+				$this->_error = $error;
+				return undefined;
+			}
+			else {
+				throw $error;
+			}
+		}
 		curl_close($curl);
 		if(isset($parameters['raw'])) {
 			if($parameters['raw']) {
@@ -97,6 +123,10 @@ class Handler
 
 	public function DELETE($path, $parameters = array()) {
 		return $this->call('DELETE', $path, $parameters);
+	}
+
+	public function getError() {
+		return $this->_error;
 	}
 }
 ?>
