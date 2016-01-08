@@ -29,10 +29,11 @@ composer install
 $loader = require __DIR__ . '/vendor/autoload.php';
 
 $key = 'your_api_key';
+$region = 'us-west';
 
-$rates = new Postmen\Rates($key, ['region' => 'US-West-2']);
-$labels = new Postmen\Labels($key, ['region' => 'US-West-2']);
-$manifests = new Postmen\Manifests($key, ['region' => 'US-West-2']);
+$rates = new Postmen\Rates($key, $region);
+$labels = new Postmen\Labels($key, $region);
+$manifests = new Postmen\Manifests($key, $region);
 ```
 
 #### Manual installation
@@ -45,10 +46,11 @@ require('.../path/to/repository/src/Postmen/Labels.php');
 require('.../path/to/repository/src/Postmen/Manifests.php');
 
 $key = 'your_api_key';
+$region = 'us-west';
 
-$rates = new Postmen\Rates($key, ['region' => 'US-West-2']);
-$labels = new Postmen\Labels($key, ['region' => 'US-West-2']);
-$manifests = new Postmen\Manifests($key, ['region' => 'US-West-2']);
+$rates = new Postmen\Rates($key, $region);
+$labels = new Postmen\Labels($key, $region);
+$manifests = new Postmen\Manifests($key, $region);
 ```
 
 ## Usage
@@ -131,8 +133,8 @@ $result = $rates->calculate($query);
 example todo
 ##### Retreive rates
 ```php
-$rates = new Postmen\Rates($key, ['region' => 'US-West-2']);
-$result = $rates->retreive('rate_id');
+$rates = new Postmen\Rates($key, $region);
+$result = $rates->retreive($id);
 ```
 #### Labels
 ##### create label
