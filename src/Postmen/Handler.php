@@ -19,7 +19,7 @@ class Handler
 	private $_version;
 	private $_error;
 
-	public function __construct($api_key, array $config)
+	public function __construct($api_key, $region, $config = array())
 	{
 		if (!isset($api_key)) {
 			throw new PostmenException('required argument is unset', 201, false);
@@ -28,18 +28,19 @@ class Handler
 		$this->_version = "0.0.1";
 		$this->_api_key = $api_key;
 		$fields = array(
-			'region' => undefined,
-			'endpoint' => 'https://sandbox-api.postmen.com',
 			'proxy' => 'no',
 			'retry' => true,
 			'rate' => 'false'
 		);
-		$this->_url = $fields['endpoint'];
 		foreach ($fields as $key => $default) {
 			$$key = isset($config[$key]) ? $config[$key] : $default;
 		}
-		if ($config['region'] == undefined) {
+		if (isset($config['endpoint'])) {
+			$this->_url = $config['endpoint'];
+		} else if ($region == undefined) {
 			throw new PostmenException('missing required field', 200, false);
+		} else {
+			$this->_url = "https://$region-api.postmen.com";
 		}
 		$this->_config = $fields;
 	}
@@ -89,6 +90,7 @@ class Handler
 		$info = curl_getinfo($curl);
 		$code = $info['http_code'];
 		if ($code != 200) {
+			// TODO read error message from API
 			$error =  new PostmenException("http response error: $code" , 101, true);
 			if ($safe) {
 				$this->_error = $error;
