@@ -31,20 +31,11 @@ class Labels extends Handler
 		return $this->POST('/v3/labels', $request, $options);
 	}
 
-	public function retreive($id, $options = array()) {
+	public function retrieve($id, $options = array()) {
 		return $this->GET("/v3/labels/$id", $options);
 	}
 
-	public function list_labels($fields, $options = array()) {
-		$accepted = array('shipper_account_id', 'status', 'limit', 'created_at_min', 'created_at_max', 'tracking_numbers', 'next_token');
-		$request = array();
-		foreach ($fields as $key => $value) {
-			if (!in_array($key, $accepted)) {
-				throw new Exception("Unsupported argument '$key'");
-			} else {
-				$request[$key] = $value;
-			}
-		}
-		return $this->POST('/v3/labels', $request, $options);
+	public function list_labels($options = array()) {
+		return $this->GET('/v3/labels', $options);
 	}
 }

@@ -31,7 +31,7 @@ class Rates extends Handler
 		return $this->POST('/v3/rates', $request, $options);
 	}
 
-	public function retreive($id, $options = array()) {
+	public function retrieve($id, $options = array()) {
 		return $this->GET("/v3/rates/$id", $options);
 	}
 

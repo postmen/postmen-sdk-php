@@ -131,10 +131,10 @@ $result = $rates->calculate($query);
 ```
 ##### List all rates
 ```php
-$rates = new Postmen\Rates($key, $region, array('endpoint' => 'https://sandbox-api.postmen.io'));
+$rates = new Postmen\Rates($key, $region);
 $results = $rates->list_rates();
 ```
-##### Retreive rates
+##### Retreive a rate
 ```php
 $rates = new Postmen\Rates($key, $region);
 $result = $rates->retreive($id);
@@ -227,7 +227,16 @@ $query = array (
 
 $labels->create($query));
 ```
-
+##### List all labels
+```php
+$labels = new Postmen\Labels($key, $region);
+$results = $rates->list_labels();
+```
+##### Retreive a label
+```php
+$labels = new Postmen\Labels($key, $region);
+$result = $labels->retreive($id);
+```
 
 #### Manifests
 ##### Create a manifest

@@ -108,7 +108,6 @@ class Handler
 			}
 		}
 		$info = curl_getinfo($curl);
-		print_r($info);
 		$code = $info['http_code'];
 		if ($code != 200) {
 			// TODO read error message from API
