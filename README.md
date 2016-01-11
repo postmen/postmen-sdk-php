@@ -130,7 +130,10 @@ $rates = new Postmen\Rates($key, $region);
 $result = $rates->calculate($query);
 ```
 ##### List all rates
-example todo
+```php
+$rates = new Postmen\Rates($key, $region, array('endpoint' => 'https://sandbox-api.postmen.io'));
+$results = $rates->list_rates();
+```
 ##### Retreive rates
 ```php
 $rates = new Postmen\Rates($key, $region);
@@ -240,7 +243,27 @@ example todo
 example todo
 ##### Retreive a cancel label
 example todo
+#### Options
+##### Custom endpoint
 
+If you need to use different endpoint then one generated using `region` value, it is possible to set it during construction by setting `endpoint` value. Standard `$sandbox` argument field in constructor function can be `null`, `undefined` or just an empty string, but must be present as this argument is not optional.
+
+```php
+$rates = new Postmen\Rates($key, "", array("endpoint" => "https://api.examples.com"));
+```
+
+##### Safe mode
+
+Initiating API object with `safe` option set to true will prevent SDK from throwing an exception in case of an error. Instead called method will return `undefined` value and set store the occured exception object in its `$_error` attribute.
+
+```php
+$rates = new Postmen\Rates($key, $region);
+$result = $rates->retreive($id, array("safe" => true));
+$error = $rates->getError();
+```
+
+##### Using proxy
+example todo
 ## The License (MIT)
 Released under the MIT license. See the LICENSE file for the complete wording.
 
