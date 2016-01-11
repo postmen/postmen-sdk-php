@@ -13,8 +13,9 @@ This extension helps developers to integrate with Postmen easily.
 #### Manual installation
 
 1. Download this repository as zip and extract where you desire OR `git clone` it.
-2. Reference desired API class from withthin your PHP source.
+2. Reference desired API class from withthin your PHP source. (very important to also include the `Handler.php` file)
 ```php
+require('.../path/to/repository/src/Postmen/Handler.php');
 require('.../path/to/repository/src/Postmen/Rates.php');
 require('.../path/to/repository/src/Postmen/Labels.php');
 require('.../path/to/repository/src/Postmen/Manifests.php');
