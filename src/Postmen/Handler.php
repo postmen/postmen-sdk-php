@@ -66,7 +66,7 @@ class Handler
 		$url = $this->_url . $path;
 		if ($method == 'GET') {
 			if (isset($parameters['query'])) {
-				$url = $url . http_build_query($parameters['query']);
+				$url = $url . '?' . http_build_query($parameters['query']);
 			}	
 		}
 		$curl = curl_init();

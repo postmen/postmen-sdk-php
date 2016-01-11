@@ -35,16 +35,19 @@ class Manifests extends Handler
 		return $this->GET("/v3/manifests/$id", $options);
 	}
 
-	public function list_manifests($fields, $options = array()) {
-		$accepted = array('shipper_account_id', 'status', 'limit', 'created_at_min', 'created_at_max', 'next_token');
-		$request = array();
-		foreach ($fields as $key => $value) {
-			if (!in_array($key, $accepted)) {
-				throw new Exception("Unsupported argument '$key'");
-			} else {
-				$request[$key] = $value;
+	public function list_manifests($fields = array(), $options = array()) {
+		if (count($fields) > 0) {
+			$accepted = array('shipper_account_id', 'status', 'limit', 'created_at_min', 'created_at_max', 'next_token');
+			$request = array();
+			foreach ($fields as $key => $value) {
+				if (!in_array($key, $accepted)) {
+					throw new Exception("Unsupported argument '$key'");
+				} else {
+					$request[$key] = $value;
+				}
 			}
+			$options['query'] = $request;
 		}
-		return $this->POST('/v3/manifests', $request, $options);
+		return $this->GET('/v3/manifests', $options);
 	}
 }

@@ -240,11 +240,29 @@ $result = $labels->retreive($id);
 
 #### Manifests
 ##### Create a manifest
-example todo
+```php
+$manifests = new Postmen\Manifests($key, $region);
+$query = array (
+	'shipper_account' => array (
+        'id' => '00000000-0000-0000-0000-000000000000',
+	)
+);
+$result = $manifests->create($query);
+```
 ##### List all manifests
-example todo
+```php
+$manifests = new Postmen\Manifests($key, $region);
+$query = array (
+	'shipper_account_id' => '00000000-0000-0000-0000-000000000000',
+	'status' => 'manifested'
+);
+$results = $manifests->list_manifests($query);
+```
 ##### Retreive a manifest
-example todo
+```php
+$manifests = new Postmen\Manifests($key, $region);
+$result = $manifests->retreive($id);
+```
 #### Cancel Labels
 ##### Cancel a label
 example todo
@@ -301,7 +319,7 @@ $result = $rates->retrieve($id, array('proxy' => $proxy));
 ```
 
 ##### Raw JSON response
-A raw JSON string response returned from the server will be obtained if we set `raw` option to `true`, example as follows:
+A raw JSON string response returned fromfined in an array object containing `host`, `port`, `username, example as follows:
 ```php
 $rates = new Postmen\Rates($key, $region);
 $json_string = $rates->retrieve($id, array('raw' => true));
