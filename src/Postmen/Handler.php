@@ -18,6 +18,7 @@ class Handler
 	private $_config;
 	private $_version;
 	private $_error;
+	private $_proxy;
 
 	public function __construct($api_key, $region, $config = array())
 	{
@@ -34,6 +35,9 @@ class Handler
 		);
 		foreach ($fields as $key => $default) {
 			$$key = isset($config[$key]) ? $config[$key] : $default;
+		}
+		if (isset($config['proxy'])) {
+			$this->_proxy = $config['proxy'];
 		}
 		if (isset($config['endpoint'])) {
 			$this->_url = $config['endpoint'];
@@ -72,6 +76,22 @@ class Handler
 			CURLOPT_CUSTOMREQUEST => $method,
 			CURLOPT_HTTPHEADER => $headers
 		);
+		$proxy = $this->_proxy;
+		if (isset($parameters['proxy'])) {
+			$proxy = $parameters['proxy'];
+		}
+		if (isset($proxy)) {
+			$curl_params[CURLOPT_PROXY] = $proxy['host'];
+			if (isset($proxy['username'])) {
+				$auth = $proxy['username'] . ':' . $proxy['password'];
+				$curl_params[CURLOPT_PROXYUSERPWD] = $auth;
+			}
+			if (isset($proxy['port'])) {
+				$curl_params[CURLOPT_PROXYPORT] = $proxy['port'];
+			}
+			$curl_params[CURLOPT_FOLLOWLOCATION] = true;
+			$curl_params[CURLOPT_HEADER] = false; 	
+		}
 		if ($method == 'POST') {
 			$curl_params[CURLOPT_POSTFIELDS] = $body;
 		}
@@ -88,6 +108,7 @@ class Handler
 			}
 		}
 		$info = curl_getinfo($curl);
+		print_r($info);
 		$code = $info['http_code'];
 		if ($code != 200) {
 			// TODO read error message from API

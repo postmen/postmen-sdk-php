@@ -263,7 +263,40 @@ $error = $rates->getError();
 ```
 
 ##### Using proxy
-example todo
+
+Proxy is defined in an array object containing `host`, `port`, `username` and `password` informations. Only `host` is required field.
+We can set such proxy object in the constructor to be used by default on any call.
+
+```php
+$proxy = array(
+	"host" => "someproxy.com",
+	"port" => 31280,
+	"username" => "username",
+	"password" => "password"
+);
+$rates = new Postmen\Rates($key, $region, array('proxy' => $proxy));
+$result = $rates->retrieve($id);
+```
+
+Or either we can set it as optional parameter to a particular call to be used only for that one time call. This is usefull when we do not need to use proxy by default or when we need to temporary overwrite the default proxy.
+
+```php
+$proxy = array(
+	"host" => "someproxy.com",
+	"port" => 31280,
+	"username" => "username",
+	"password" => "password"
+);
+$rates = new Postmen\Rates($key, $region);
+$result = $rates->retrieve($id, array('proxy' => $proxy));
+```
+
+##### Raw JSON response
+A raw JSON string response returned from the server will be obtained if we set `raw` option to `true`, example as follows:
+```php
+$rates = new Postmen\Rates($key, $region);
+$json_string = $rates->retrieve($id, array('raw' => true));
+```
 ## The License (MIT)
 Released under the MIT license. See the LICENSE file for the complete wording.
 
