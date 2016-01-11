@@ -10,6 +10,23 @@ This extension helps developers to integrate with Postmen easily.
 
 
 ## Installation
+#### Manual installation
+
+1. Download this repository as zip and extract where you desire OR `git clone` it.
+2. Reference desired API class from withthin your PHP source.
+```php
+require('.../path/to/repository/src/Postmen/Rates.php');
+require('.../path/to/repository/src/Postmen/Labels.php');
+require('.../path/to/repository/src/Postmen/Manifests.php');
+
+$key = 'your_api_key';
+$region = 'us-west';
+
+$rates = new Postmen\Rates($key, $region);
+$labels = new Postmen\Labels($key, $region);
+$manifests = new Postmen\Manifests($key, $region);
+$cancel_labels = new Postmen\CancelLabels($key, $region);
+```
 #### Using Composer
 
 0. If you don't yet have Composer, to download and Install Composer, open [here](https://getcomposer.org/download/)
@@ -35,24 +52,6 @@ $rates = new Postmen\Rates($key, $region);
 $labels = new Postmen\Labels($key, $region);
 $manifests = new Postmen\Manifests($key, $region);
 ```
-
-#### Manual installation
-
-1. Download this repository as zip and extract where you desire OR `git clone` it.
-2. Reference desired API class from withthin your PHP source.
-```php
-require('.../path/to/repository/src/Postmen/Rates.php');
-require('.../path/to/repository/src/Postmen/Labels.php');
-require('.../path/to/repository/src/Postmen/Manifests.php');
-
-$key = 'your_api_key';
-$region = 'us-west';
-
-$rates = new Postmen\Rates($key, $region);
-$labels = new Postmen\Labels($key, $region);
-$manifests = new Postmen\Manifests($key, $region);
-```
-
 ## Usage
 
 #### Rates
@@ -132,7 +131,7 @@ $result = $rates->calculate($query);
 ##### List all rates
 ```php
 $rates = new Postmen\Rates($key, $region);
-$results = $rates->list_rates();
+$results = $rates->list_all();
 ```
 ##### Retreive a rate
 ```php
@@ -230,7 +229,7 @@ $labels->create($query));
 ##### List all labels
 ```php
 $labels = new Postmen\Labels($key, $region);
-$results = $rates->list_labels();
+$results = $rates->list_all();
 ```
 ##### Retreive a label
 ```php
@@ -265,11 +264,25 @@ $result = $manifests->retreive($id);
 ```
 #### Cancel Labels
 ##### Cancel a label
-example todo
+```php
+$cancel_labels = new Postmen\CancelLabels($key, $region);
+$data = array (
+	'label' => array (
+		'id' => '00000000-0000-0000-0000-000000000000'
+	)
+);
+$results = $cancel_labels->cancel($data);
+```
 ##### List all cancel labels
-example todo
+```php
+$rates = new Postmen\CancelLabels($key, $region);
+$results = $rates->list_all();
+```
 ##### Retreive a cancel label
-example todo
+```php
+$cancel_labels = new Postmen\CancelLabels($key, $region);
+$result = $cancel_labels->retrieve($id);
+```
 #### Options
 ##### Custom endpoint
 
@@ -331,3 +344,4 @@ Released under the MIT license. See the LICENSE file for the complete wording.
 ## Contributor
 - Sunny Chow - [view contributions](https://github.com/postmen/sdk-php/commits?author=sunnychow)
 - Marek Narozniak - [view contributions](https://github.com/postmen/sdk-php/commits?author=marekyggdrasil)
+

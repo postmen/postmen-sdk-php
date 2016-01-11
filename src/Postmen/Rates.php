@@ -11,23 +11,7 @@ use Exception;
  */
 class Rates extends Handler
 {
-	public function calculate($fields, $options = array())  {
-/*		$required = array('is_document', 'shipment');
-		$accepted = array('async', 'shipper_accounts');
-		$accepted = array_merge($accepted, $required);
-		$request = array();
-		foreach ($required as $key => $value) {
-			if (!isset($fields[$value])) {
-				throw new Exception("missing required argument '$value'");
-			}
-		}*/
-		foreach ($fields as $key => $value) {
-//			if (!in_array($key, $accepted)) {
-//				throw new Exception("Unsupported argument '$key'");
-//			} else {
-				$request[$key] = $value;
-//			}
-		}
+	public function calculate($request, $options = array())  {
 		return $this->POST('/v3/rates', $request, $options);
 	}
 
@@ -35,7 +19,7 @@ class Rates extends Handler
 		return $this->GET("/v3/rates/$id", $options);
 	}
 
-	public function list_rates($options = array()) {
+	public function list_all($options = array()) {
 		return $this->GET('/v3/rates', $options);
 	}
 }

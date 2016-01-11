@@ -11,23 +11,7 @@ use Exception;
  */
 class Manifests extends Handler
 {
-	public function create($fields, $options = array())  {
-		$required = array('shipper_account');
-		$accepted = array('async');
-		$accepted = array_merge($accepted, $required);
-		$request = array();
-		foreach ($required as $key => $value) {
-			if (!isset($fields[$value])) {
-				throw new Exception("missing required argument '$value'");
-			}
-		}
-		foreach ($fields as $key => $value) {
-			if (!in_array($key, $accepted)) {
-				throw new Exception("Unsupported argument '$key'");
-			} else {
-				$request[$key] = $value;
-			}
-		}
+	public function create($request, $options = array())  {
 		return $this->POST('/v3/manifests', $request, $options);
 	}
 
@@ -35,17 +19,8 @@ class Manifests extends Handler
 		return $this->GET("/v3/manifests/$id", $options);
 	}
 
-	public function list_manifests($fields = array(), $options = array()) {
+	public function list_all($request = array(), $options = array()) {
 		if (count($fields) > 0) {
-			$accepted = array('shipper_account_id', 'status', 'limit', 'created_at_min', 'created_at_max', 'next_token');
-			$request = array();
-			foreach ($fields as $key => $value) {
-				if (!in_array($key, $accepted)) {
-					throw new Exception("Unsupported argument '$key'");
-				} else {
-					$request[$key] = $value;
-				}
-			}
 			$options['query'] = $request;
 		}
 		return $this->GET('/v3/manifests', $options);
