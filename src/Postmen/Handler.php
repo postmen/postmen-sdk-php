@@ -99,7 +99,7 @@ class Handler
 		$response = curl_exec($curl);
 		$err = curl_error($curl);
 		if ($err) {
-			$error = new PostmenException("failed to request: $err" , 100, true);
+			$error = new PostmenException("failed to request: $err" , 100, true, array());
 			if ($safe) {
 				$this->_error = $error;
 				return undefined;
@@ -109,24 +109,79 @@ class Handler
 		}
 		$info = curl_getinfo($curl);
 		$code = $info['http_code'];
-		if ($code != 200) {
-			// TODO read error message from API
-			$error =  new PostmenException("http response error: $code" , 101, true);
-			if ($safe) {
-				$this->_error = $error;
-				return undefined;
-			}
-			else {
-				throw $error;
-			}
-		}
 		curl_close($curl);
-		if(isset($parameters['raw'])) {
-			if($parameters['raw']) {
-				return $response;
-			}
+		$err_message = 'Something went wrong on Postmen\'s end.';
+		$err_code = 0;
+		$err_retryable = false;
+		$err_details = array();
+		switch ($code) {
+			case 200:
+				if(isset($parameters['raw'])) {
+					if($parameters['raw']) {
+						return $response;
+					}
+				}
+				return $this->handle($response, $safe);
+				break;
+			case 429:
+				$err_message = 'You have exceeded the API call rate limit. Please check the header field \'X-RateLimit-Reset\' for time left until the limit release.';
+				$err_code = 429;
+				$err_retryable = true;
+				$err_details = array();
+				break;
+			case 500:
+				$err_code = 500;
+				break;
+			case 502:
+				$err_code = 502;
+				break;
+			case 503:
+				$err_code = 503;
+				break;
+			case 504:
+				$err_code = 504;
+				break;
+			default:
+				$err_message = 'Unhandled error, update your SDK';
+				$err_code = 999;
 		}
-		return json_decode($response);
+		return $this->handleError($err_message, $err_code, $err_retryable, $err_details, $safe);
+	}
+
+	private function handleError($err_message, $err_code, $err_retryable, $err_details, $safe) {
+		$error = new PostmenException($err_message, $err_code, $err_retryable, $err_details);
+		if ($safe) {
+			$this->_error = $error;
+			return undefined;
+		} else {
+			throw $error;
+			return undefined;
+		}
+	}
+
+	private function handle($response, $safe) {
+		$parsed = json_decode($response);
+		if ($parsed->meta->code != 200) {
+			$err_code = 0; 
+			$err_message = 'Postmen server side error occured';
+			$err_details = array();
+			$err_retryable = false;
+			if (isset($parsed->meta->code)) {
+				$err_code = $parsed->meta->code;
+			}
+			if (isset($parsed->meta->message)) {
+				$err_message = $parsed->meta->message;
+			}
+			if (isset($parsed->meta->details)) {
+				$err_details = $parsed->meta->details;
+			}
+			if (isset($parsed->meta->retryable)) {
+				$err_retryable = $parsed->meta->retryable;
+			}
+			return $this->handleError($err_message, $err_code, $err_retryable, $err_details, $safe);
+		} else {
+			return $parsed;
+		}
 	}
 
 	public function GET($path, $parameters = array()) {
