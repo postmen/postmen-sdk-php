@@ -15,7 +15,6 @@ class Handler
 {
 	private $_api_key;
 	private $_url;
-	private $_config;
 	private $_version;
 	private $_error;
 	private $_proxy;
@@ -28,14 +27,6 @@ class Handler
 		$this->_error = undefined;
 		$this->_version = "0.0.1";
 		$this->_api_key = $api_key;
-		$fields = array(
-			'proxy' => 'no',
-			'retry' => true,
-			'rate' => 'false'
-		);
-		foreach ($fields as $key => $default) {
-			$$key = isset($config[$key]) ? $config[$key] : $default;
-		}
 		if (isset($config['proxy'])) {
 			$this->_proxy = $config['proxy'];
 		}
@@ -46,7 +37,6 @@ class Handler
 		} else {
 			$this->_url = "https://$region-api.postmen.com";
 		}
-		$this->_config = $fields;
 	}
 
 	public function call($method, $path, $parameters = array()) {
@@ -107,60 +97,35 @@ class Handler
 				throw $error;
 			}
 		}
-		$info = curl_getinfo($curl);
-		$code = $info['http_code'];
 		curl_close($curl);
-		$err_message = 'Something went wrong on Postmen\'s end.';
-		$err_code = 0;
-		$err_retryable = false;
-		$err_details = array();
-		switch ($code) {
-			case 200:
-				if(isset($parameters['raw'])) {
-					if($parameters['raw']) {
-						return $response;
-					}
+		$parsed = json_decode($response);
+		if ($parsed != NULL) {
+			if(isset($parameters['raw'])) {
+				if($parameters['raw']) {
+					return $response;
 				}
-				return $this->handle($response, $safe);
-				break;
-			case 429:
-				$err_message = 'You have exceeded the API call rate limit. Please check the header field \'X-RateLimit-Reset\' for time left until the limit release.';
-				$err_code = 429;
-				$err_retryable = true;
-				$err_details = array();
-				break;
-			case 500:
-				$err_code = 500;
-				break;
-			case 502:
-				$err_code = 502;
-				break;
-			case 503:
-				$err_code = 503;
-				break;
-			case 504:
-				$err_code = 504;
-				break;
-			default:
-				$err_message = 'Unhandled error, update your SDK';
-				$err_code = 999;
+			}
+			return $this->handle($parsed, $safe);
+		} else {
+			$err_message = 'Something went wrong on Postmen\'s end';
+			$err_code = 500;
+			$err_retryable = false;
+			$err_details = array();
+			return $this->handleError($err_message, $err_code, $err_retryable, $err_details, $safe);
 		}
-		return $this->handleError($err_message, $err_code, $err_retryable, $err_details, $safe);
 	}
 
 	private function handleError($err_message, $err_code, $err_retryable, $err_details, $safe) {
 		$error = new PostmenException($err_message, $err_code, $err_retryable, $err_details);
 		if ($safe) {
 			$this->_error = $error;
-			return undefined;
 		} else {
 			throw $error;
-			return undefined;
 		}
+		return undefined;
 	}
 
-	private function handle($response, $safe) {
-		$parsed = json_decode($response);
+	private function handle($parsed, $safe) {
 		if ($parsed->meta->code != 200) {
 			$err_code = 0; 
 			$err_message = 'Postmen server side error occured';

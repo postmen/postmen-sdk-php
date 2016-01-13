@@ -53,6 +53,11 @@ $rates = new Postmen\Rates($key, $region);
 $labels = new Postmen\Labels($key, $region);
 $manifests = new Postmen\Manifests($key, $region);
 ```
+
+#### Requirements
+
+Minimum PHP version required to use this SDK is `5.2`
+
 ## Usage
 
 #### Rates
