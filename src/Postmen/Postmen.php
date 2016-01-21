@@ -11,7 +11,7 @@ use Postmen\PostmenException;
  *
  * @package Postmen
  */
-class Handler
+class Postmen
 {
 	private $_api_key;
 	private $_url;
@@ -24,27 +24,25 @@ class Handler
 		if (!isset($api_key)) {
 			throw new PostmenException('required argument is unset', 201, false);
 		}
-		$this->_error = undefined;
-		$this->_version = "0.0.1";
+		$this->_version = "0.1.0";
 		$this->_api_key = $api_key;
 		if (isset($config['proxy'])) {
 			$this->_proxy = $config['proxy'];
 		}
 		if (isset($config['endpoint'])) {
 			$this->_url = $config['endpoint'];
-		} else if ($region == undefined) {
+		} else if (!isset($region)) {
 			throw new PostmenException('missing required field', 200, false);
 		} else {
 			$this->_url = "https://$region-api.postmen.com";
 		}
 	}
 
-	public function call($method, $path, $parameters = array()) {
-		$safe = false;
-		if (isset($parameters['safe'])) {
-			$safe = $parameters['safe'];
+	public function buildCurlParams($method, $path, $parameters = array()) {
+		$body = '';
+		if (isset($parameters['body'])) {
+			$body = $parameters['body'];
 		}
-		$body = $parameters['body'];
 		if (!is_string($body)) {
 			$body = json_encode($body);
 		}
@@ -53,13 +51,11 @@ class Handler
 			"postmen-api-key: $this->_api_key",
 			"x-postmen-agent: php-sdk-$this->_version"
 		);
-		$url = $this->_url . $path;
-		if ($method == 'GET') {
-			if (isset($parameters['query'])) {
-				$url = $url . '?' . http_build_query($parameters['query']);
-			}	
+		$query = NULL;
+		if (isset($parameters['query'])) {
+			$query = $parameters['query'];
 		}
-		$curl = curl_init();
+		$url = $this->generateURL($this->_url, $path, $method, $query);
 		$curl_params = array(
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_URL => $url,
@@ -82,9 +78,25 @@ class Handler
 			$curl_params[CURLOPT_FOLLOWLOCATION] = true;
 			$curl_params[CURLOPT_HEADER] = false; 	
 		}
-		if ($method == 'POST') {
+		if ($method != 'GET') {
 			$curl_params[CURLOPT_POSTFIELDS] = $body;
 		}
+		return $curl_params;
+	}
+
+	public function call($method, $path, $parameters = array()) {
+		$raw = false;
+		if(isset($parameters['raw'])) {
+			if($parameters['raw']) {
+				$raw = true;
+			}
+		}
+		$safe = false;
+		if (isset($parameters['safe'])) {
+			$safe = $parameters['safe'];
+		}
+		$curl = curl_init();
+		$curl_params = $this->buildCurlParams($method, $path, $parameters);
 		curl_setopt_array($curl, $curl_params);
 		$response = curl_exec($curl);
 		$err = curl_error($curl);
@@ -98,12 +110,14 @@ class Handler
 			}
 		}
 		curl_close($curl);
+		return $this->processCurlResponse($response, $safe, $raw);
+	}
+
+	public function processCurlResponse($response, $safe, $raw) {
 		$parsed = json_decode($response);
 		if ($parsed != NULL) {
-			if(isset($parameters['raw'])) {
-				if($parameters['raw']) {
-					return $response;
-				}
+			if($raw) {
+				return $response;
 			}
 			return $this->handle($parsed, $safe);
 		} else {
@@ -113,19 +127,20 @@ class Handler
 			$err_details = array();
 			return $this->handleError($err_message, $err_code, $err_retryable, $err_details, $safe);
 		}
+
 	}
 
-	private function handleError($err_message, $err_code, $err_retryable, $err_details, $safe) {
+	public function handleError($err_message, $err_code, $err_retryable, $err_details, $safe) {
 		$error = new PostmenException($err_message, $err_code, $err_retryable, $err_details);
 		if ($safe) {
 			$this->_error = $error;
 		} else {
 			throw $error;
 		}
-		return undefined;
+		return NULL;
 	}
 
-	private function handle($parsed, $safe) {
+	public function handle($parsed, $safe) {
 		if ($parsed->meta->code != 200) {
 			$err_code = 0; 
 			$err_message = 'Postmen server side error occured';
@@ -145,26 +160,58 @@ class Handler
 			}
 			return $this->handleError($err_message, $err_code, $err_retryable, $err_details, $safe);
 		} else {
-			return $parsed;
+			return $parsed->data;
 		}
 	}
 
-	public function GET($path, $parameters = array()) {
+	public function generateURL($url, $path, $method, $query) {
+		if ($method == 'GET') {
+			if (isset($query)) {
+				return $url . $path . '?' . http_build_query($query);
+			}	
+		}
+		return $url . $path;
+	}
+
+	public function callGET($path, $parameters = array()) {
 		return $this->call('GET', $path, $parameters);
 	}
 
-	public function POST($path, $body, $parameters = array()) {
+	public function callPOST($path, $body, $parameters = array()) {
 		$parameters['body'] = $body;
 		return $this->call('POST', $path, $parameters);
 	}
 
-	public function PUT($path, $body, $parameters = array()) {
+	public function callPUT($path, $body, $parameters = array()) {
 		$parameters['body'] = $body;
 		return $this->call('PUT', $path, $parameters);
 	}
 
-	public function DELETE($path, $parameters = array()) {
+	public function callDELETE($path, $parameters = array()) {
 		return $this->call('DELETE', $path, $parameters);
+	}
+
+	public function get($resource, $id = NULL, $parameters = array()) {
+		if ($id !== NULL) {
+			return $this->callGET("/v3/$resource/$id", $parameters);
+		} else {
+			return $this->callGET("/v3/$resource", $parameters);
+		}
+	}
+
+	public function create($resource, $payload, $parameters = array()) {
+		$payload['async'] = false;
+		return $this->callPOST("/v3/$resource/", $payload, $parameters);
+	}
+
+	public function cancel($id, $parameters = array()) {
+		$payload = array (
+			'label' => array (
+				'id' => $id
+			),
+			'async' => false
+		);
+		return $this->callPOST("/v3/cancel-label/", $payload, $parameters);
 	}
 
 	public function getError() {

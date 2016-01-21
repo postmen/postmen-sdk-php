@@ -15,18 +15,14 @@ This extension helps developers to integrate with Postmen easily.
 1. Download this repository as zip and extract where you desire OR `git clone` it.
 2. Reference desired API class from withthin your PHP source. (very important to also include the `Handler.php` file)
 ```php
-require('.../path/to/repository/src/Postmen/Handler.php');
-require('.../path/to/repository/src/Postmen/Rates.php');
-require('.../path/to/repository/src/Postmen/Labels.php');
-require('.../path/to/repository/src/Postmen/Manifests.php');
+require('.../path/to/repository/src/Postmen/Postmen.php');
+
+use Postmen\Postmen;
 
 $key = 'your_api_key';
 $region = 'us-west';
 
-$rates = new Postmen\Rates($key, $region);
-$labels = new Postmen\Labels($key, $region);
-$manifests = new Postmen\Manifests($key, $region);
-$cancel_labels = new Postmen\CancelLabels($key, $region);
+$api = new Postmen($key, $region);
 ```
 #### Using Composer
 
@@ -46,17 +42,17 @@ composer install
 ```php
 $loader = require __DIR__ . '/vendor/autoload.php';
 
+use Postmen\Postmen;
+
 $key = 'your_api_key';
 $region = 'us-west';
 
-$rates = new Postmen\Rates($key, $region);
-$labels = new Postmen\Labels($key, $region);
-$manifests = new Postmen\Manifests($key, $region);
+$api = new Postmen($key, $region);
 ```
 
 #### Requirements
 
-Minimum PHP version required to use this SDK is `5.2`
+Minimum PHP version required to use this SDK is `5.2` for just using the SDK. For development PHP `5.6` is required (to run automated tests).
 
 ## Usage
 
@@ -99,7 +95,7 @@ $receiver = array (
 	'email' => 'test@test.test',
 	'type' => 'residential',
 );
-$query = array (
+$payload = array (
 	'async' => false,
 	'shipper_accounts' => array (
 		0 => array (
@@ -131,23 +127,23 @@ $query = array (
 	'is_document' => false
 );
 
-$rates = new Postmen\Rates($key, $region);
-$result = $rates->calculate($query);
+$api = new Postmen($key, $region);
+$result = $api->create('rates', $payload);
 ```
 ##### List all rates
 ```php
-$rates = new Postmen\Rates($key, $region);
-$results = $rates->list_all();
+$api = new Postmen($key, $region);
+$results = $api->get('rates');
 ```
 ##### Retreive a rate
 ```php
-$rates = new Postmen\Rates($key, $region);
-$result = $rates->retreive($id);
+$api = new Postmen($key, $region);
+$result = $api->get('rates', $id);
 ```
 #### Labels
 ##### create label
 ```php
-$labels = new Postmen\Labels($key, $region]);
+$api = new Postmen($key, $region]);
 $parcel = array(
 	'box_type' => 'custom',
 	'weight' => array (
@@ -202,7 +198,7 @@ $receiver = array (
 	'email' => 'test@test.test',
 	'type' => 'residential',
 );
-$query = array (
+$payload = array (
 	'is_document' => false,
 	'async' => false,
 	'return_shipment' => false,
@@ -230,64 +226,55 @@ $query = array (
 	),
 );
 
-$labels->create($query));
+$api->create('labels', $payload));
 ```
 ##### List all labels
 ```php
-$labels = new Postmen\Labels($key, $region);
-$results = $rates->list_all();
+$api = new Postmen($key, $region);
+$results = $api->get('labels');
 ```
 ##### Retreive a label
 ```php
-$labels = new Postmen\Labels($key, $region);
-$result = $labels->retreive($id);
+$api = new Postmen($key, $region);
+$result = $api->get('labels', $id);
 ```
 
 #### Manifests
 ##### Create a manifest
 ```php
-$manifests = new Postmen\Manifests($key, $region);
-$query = array (
+$api = new Postmen($key, $region);
+$payload = array (
 	'shipper_account' => array (
-        'id' => '00000000-0000-0000-0000-000000000000',
+        	'id' => '00000000-0000-0000-0000-000000000000',
 	)
 );
-$result = $manifests->create($query);
+$result = $api->create($payload);
 ```
 ##### List all manifests
 ```php
-$manifests = new Postmen\Manifests($key, $region);
-$query = array (
-	'shipper_account_id' => '00000000-0000-0000-0000-000000000000',
-	'status' => 'manifested'
-);
-$results = $manifests->list_manifests($query);
+$api = new Postmen($key, $region);
+$results = $api->get('manifests');
 ```
 ##### Retreive a manifest
 ```php
-$manifests = new Postmen\Manifests($key, $region);
-$result = $manifests->retreive($id);
+$api = new Postmen($key, $region);
+$result = $api->get('manifests', $id);
 ```
 #### Cancel Labels
 ##### Cancel a label
 ```php
-$cancel_labels = new Postmen\CancelLabels($key, $region);
-$data = array (
-	'label' => array (
-		'id' => '00000000-0000-0000-0000-000000000000'
-	)
-);
-$results = $cancel_labels->cancel($data);
+$api = new Postmen($key, $region);
+$result = $api->cancel($id);
 ```
 ##### List all cancel labels
 ```php
-$rates = new Postmen\CancelLabels($key, $region);
-$results = $rates->list_all();
+$api = new Postmen($key, $region);
+$results = $api->get('cancel-labels');
 ```
 ##### Retreive a cancel label
 ```php
-$cancel_labels = new Postmen\CancelLabels($key, $region);
-$result = $cancel_labels->retrieve($id);
+$api = new Postmen($key, $region);
+$result = $api->get('cancel-labels', $id);
 ```
 #### Options
 ##### Custom endpoint
@@ -295,7 +282,7 @@ $result = $cancel_labels->retrieve($id);
 If you need to use different endpoint then one generated using `region` value, it is possible to set it during construction by setting `endpoint` value. Standard `$sandbox` argument field in constructor function can be `null`, `undefined` or just an empty string, but must be present as this argument is not optional.
 
 ```php
-$rates = new Postmen\Rates($key, "", array("endpoint" => "https://api.examples.com"));
+$rates = new Postmen($key, "", array("endpoint" => "https://api.examples.com"));
 ```
 
 ##### Safe mode
@@ -303,9 +290,9 @@ $rates = new Postmen\Rates($key, "", array("endpoint" => "https://api.examples.c
 Initiating API object with `safe` option set to true will prevent SDK from throwing an exception in case of an error. Instead called method will return `undefined` value and set store the occured exception object in its `$_error` attribute.
 
 ```php
-$rates = new Postmen\Rates($key, $region);
-$result = $rates->retreive($id, array("safe" => true));
-$error = $rates->getError();
+$api = new Postmen($key, $region);
+$result = $api->get('rates', $id, array("safe" => true));
+$error = $api->getError();
 ```
 
 ##### Using proxy
@@ -320,8 +307,8 @@ $proxy = array(
 	"username" => "username",
 	"password" => "password"
 );
-$rates = new Postmen\Rates($key, $region, array('proxy' => $proxy));
-$result = $rates->retrieve($id);
+$api = new Postmen($key, $region, array('proxy' => $proxy));
+$result = $api->get('rates', $id);
 ```
 
 Or either we can set it as optional parameter to a particular call to be used only for that one time call. This is usefull when we do not need to use proxy by default or when we need to temporary overwrite the default proxy.
@@ -333,19 +320,23 @@ $proxy = array(
 	"username" => "username",
 	"password" => "password"
 );
-$rates = new Postmen\Rates($key, $region);
-$result = $rates->retrieve($id, array('proxy' => $proxy));
+$api = new Postmen($key, $region);
+$result = $api->get('rates', $id, array('proxy' => $proxy));
 ```
 
 ##### Raw JSON response
 A raw JSON string response returned fromfined in an array object containing `host`, `port`, `username, example as follows:
 ```php
-$rates = new Postmen\Rates($key, $region);
-$json_string = $rates->retrieve($id, array('raw' => true));
+$api = new Postmen($key, $region);
+$json_string = $api->get('rates', $id, array('raw' => true));
 ```
+## Testing
+If you contribute it is recommended to run automated test before you pull request your changes.
+
 ## The License (MIT)
 Released under the MIT license. See the LICENSE file for the complete wording.
 
+`phpunit --bootstrap tests/bootstrap.php tests/Postmen.php`
 
 ## Contributor
 - Sunny Chow - [view contributions](https://github.com/postmen/sdk-php/commits?author=sunnychow)
