@@ -2,6 +2,7 @@
 
 use Postmen\PostmenException;
 use Postmen\Postmen;
+use Postmen\FakePostmen;
 
 class PostmenTest extends PHPUnit_Framework_TestCase {
 	/** Checks if exception will be raised in case if
@@ -79,6 +80,202 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 			$this->assertEquals($exception->getMessage(), $message);
 		}
 	}
+
+	/** Checks if will retry after delay
+	 *  if curl failes to process the request
+	 */
+	public function testRetryCurl() {
+		$handler = new Postmen('', '', array('retry' => true));
+
+		$curl_response = '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}';
+
+		$mock_curl = new PHPUnit_Extensions_MockFunction('curl_exec', $handler);
+		$mock_curl->expects($this->any())->will($this->returnValue($curl_response));
+
+		$mock_error = new PHPUnit_Extensions_MockFunction('curl_error', $handler);
+		$mock_error->expects($this->at(0))->will($this->returnValue(true));
+		$mock_error->expects($this->at(1))->will($this->returnValue(true));
+		$mock_error->expects($this->at(2))->will($this->returnValue(false));
+
+		date_default_timezone_set('UTC');
+		$before = date_create();
+		$result = $handler->get('labels', '');
+		$after = date_create();
+
+	       	$time = date_timestamp_get($after) - date_timestamp_get($before);
+		$this->assertGreaterThanOrEqual(3, $time);
+	}
+
+	/** expects not to fail if we retry four times
+	 *  5 times
+	 */
+	public function testRetryMaxAttempts() {
+		$handler = new Postmen('', '', array('retry' => true));
+
+		$curl_response = '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}';
+
+		$mock_curl = new PHPUnit_Extensions_MockFunction('curl_exec', $handler);
+		$mock_curl->expects($this->any())->will($this->returnValue($curl_response));
+
+		$mock_error = new PHPUnit_Extensions_MockFunction('curl_error', $handler);
+		$mock_error->expects($this->at(0))->will($this->returnValue(true));
+		$mock_error->expects($this->at(1))->will($this->returnValue(true));
+		$mock_error->expects($this->at(2))->will($this->returnValue(true));
+		$mock_error->expects($this->at(3))->will($this->returnValue(true));
+		$mock_error->expects($this->at(4))->will($this->returnValue(false));
+
+		$mock_sleep = new PHPUnit_Extensions_MockFunction('sleep', $handler);
+		$mock_sleep->expects($this->any())->will($this->returnValue(1));
+
+		$result = $handler->get('labels', '');
+	}
+
+	/** expects not to fail if we retry four times
+	 *  5 times
+	 */
+	public function testRetryMaxAttemptsExceeded() {
+		$handler = new Postmen('', '', array('retry' => true));
+
+		$curl_response = '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}';
+
+		$mock_curl = new PHPUnit_Extensions_MockFunction('curl_exec', $handler);
+		$mock_curl->expects($this->any())->will($this->returnValue($curl_response));
+
+		$mock_error = new PHPUnit_Extensions_MockFunction('curl_error', $handler);
+		$mock_error->expects($this->at(0))->will($this->returnValue(true));
+		$mock_error->expects($this->at(1))->will($this->returnValue(true));
+		$mock_error->expects($this->at(2))->will($this->returnValue(true));
+		$mock_error->expects($this->at(3))->will($this->returnValue(true));
+		$mock_error->expects($this->at(4))->will($this->returnValue(true));
+
+		$exceptionClass = get_class(new PostmenException('', 200, '', ''));
+		$this->setExpectedException($exceptionClass);
+
+		$mock_sleep = new PHPUnit_Extensions_MockFunction('sleep', $handler);
+		$mock_sleep->expects($this->any())->will($this->returnValue(1));
+
+		$result = $handler->get('labels', '');
+	}
+
+	/** checks if will retry after delay
+	 *  if postmen API returns retryable error
+	 */
+	public function testRetryPostmen() {
+		$handler = new Postmen('', '', array('retry' => true));
+
+		$curl_response_failed = '{"meta":{"code":500,"message":"error","retryable":true,"details":[]},"data":{}}';
+		$curl_response_ok = '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}';
+
+		$mock_curl = new PHPUnit_Extensions_MockFunction('curl_exec', $handler);
+		$mock_curl->expects($this->at(0))->will($this->returnValue($curl_response_failed));
+		$mock_curl->expects($this->at(1))->will($this->returnValue($curl_response_ok));
+
+		$mock_error = new PHPUnit_Extensions_MockFunction('curl_error', $handler);
+		$mock_error->expects($this->any())->will($this->returnValue(false));
+
+		$mock_sleep = new PHPUnit_Extensions_MockFunction('sleep', $handler);
+		$mock_sleep->expects($this->any())->will($this->returnValue(1));
+
+		$result = $handler->get('labels', '');
+	}
+
+	/** checks if will not retry after delay
+	 *  if postmen API returns non retryable error
+	 */
+	public function testNotRetryPostmen() {
+		$handler = new Postmen('', '', array('retry' => true));
+
+		$curl_response_failed = '{"meta":{"code":500,"message":"error","retryable":false,"details":[]},"data":{}}';
+
+		$mock_curl = new PHPUnit_Extensions_MockFunction('curl_exec', $handler);
+		$mock_curl->expects($this->at(0))->will($this->returnValue($curl_response_failed));
+
+		$mock_error = new PHPUnit_Extensions_MockFunction('curl_error', $handler);
+		$mock_error->expects($this->any())->will($this->returnValue(false));
+
+		$mock_sleep = new PHPUnit_Extensions_MockFunction('sleep', $handler);
+		$mock_sleep->expects($this->any())->will($this->returnValue(1));
+
+		$exceptionClass = get_class(new PostmenException('', 200, '', ''));
+		$this->setExpectedException($exceptionClass);
+
+		$result = $handler->get('labels', '');
+	}
+
+	/** checks proxy functions (that wrap around
+	 *  context-less functions)
+	 */
+	public function testWrappers() {
+		$handler = new FakePostmen('', 'region');
+
+		// test context methods
+		$ret = $handler->get('resource');
+		$this->assertEquals($ret['method'], 'GET');
+		$this->assertEquals($ret['path'], '/v3/resource');
+		$this->assertEquals(count($ret['parameters']), 0);
+
+		$ret = $handler->get('resource', '1234567890');
+		$this->assertEquals($ret['method'], 'GET');
+		$this->assertEquals($ret['path'], '/v3/resource/1234567890');
+		$this->assertEquals(count($ret['parameters']), 0);
+
+		$payload = array(
+			'something' => 'value'
+		);
+		$ret = $handler->create('resource', $payload);
+		$this->assertEquals($ret['method'], 'POST');
+		$this->assertEquals($ret['path'], '/v3/resource');
+		$this->assertEquals(count($ret['parameters']), 1);
+		$this->assertEquals(isset($ret['parameters']['body']), true);
+		$this->assertEquals(isset($ret['parameters']['body']['something']), true);
+		$this->assertEquals($ret['parameters']['body']['something'], 'value');
+		$this->assertEquals(isset($ret['parameters']['body']['async']), true);
+		$this->assertEquals($ret['parameters']['body']['async'], false);
+
+		$ret = $handler->cancel('1234567890');
+		$this->assertEquals($ret['method'], 'POST');
+		$this->assertEquals($ret['path'], '/v3/cancel-labels');
+		$this->assertEquals(count($ret['parameters']), 1);
+		$this->assertEquals(isset($ret['parameters']['body']), true);
+		$this->assertEquals(isset($ret['parameters']['body']['label']['id']), true);
+		$this->assertEquals($ret['parameters']['body']['label']['id'], '1234567890');
+		$this->assertEquals(isset($ret['parameters']['body']['async']), true);
+		$this->assertEquals($ret['parameters']['body']['async'], false);
+
+		// test context-less methods
+
+		$parameters = array(
+			'something' => 'value'
+		);
+		$body = 'THIS IS REQUEST BODY';
+
+		$ret = $handler->callGET('/v3/resource');
+		$this->assertEquals($ret['method'], 'GET');
+		$this->assertEquals($ret['path'], '/v3/resource');
+		$this->assertEquals(count($ret['parameters']), 0);
+
+		$ret = $handler->callPOST('/v3/resource', $body);
+		$this->assertEquals($ret['method'], 'POST');
+		$this->assertEquals($ret['path'], '/v3/resource');
+		$this->assertEquals(count($ret['parameters']), 1);
+		$this->assertEquals(isset($ret['parameters']['body']), true);
+		$this->assertEquals($ret['parameters']['body'], $body);
+
+		$ret = $handler->callPUT('/v3/resource', $body);
+		$this->assertEquals($ret['method'], 'PUT');
+		$this->assertEquals($ret['path'], '/v3/resource');
+		$this->assertEquals(count($ret['parameters']), 1);
+		$this->assertEquals(isset($ret['parameters']['body']), true);
+		$this->assertEquals($ret['parameters']['body'], $body);
+
+		$ret = $handler->callDELETE('/v3/resource', $body);
+		$this->assertEquals($ret['method'], 'DELETE');
+		$this->assertEquals($ret['path'], '/v3/resource');
+		$this->assertEquals(count($ret['parameters']), 1);
+		$this->assertEquals(isset($ret['parameters']['body']), true);
+		$this->assertEquals($ret['parameters']['body'], $body);
+	}
+
 
 	/**
 	 *  test if request method is correct, body fields according
