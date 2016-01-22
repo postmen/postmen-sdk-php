@@ -5,16 +5,42 @@ use Postmen\Postmen;
 use Postmen\FakePostmen;
 
 class PostmenTest extends PHPUnit_Framework_TestCase {
+
+	private $headers =
+		"Date: Fri, 22 Jan 2016 04:05:30 GMT\r\n" .
+		"X-RateLimit-Limit: 10\r\n" .
+		"X-RateLimit-Remaining: 10\r\n" .
+		"X-RateLimit-Reset: 1453435538946\r\n";
+
+	private $headers_exceeded =
+		"Date: Fri, 22 Jan 2016 04:05:30 GMT\r\n" .
+		"X-RateLimit-Limit: 10\r\n" .
+		"X-RateLimit-Remaining: 0\r\n" .
+		"X-RateLimit-Reset: 1453435538946\r\n";
+
+	private $headers_length = 0;
+	private $headers_length_exceeded = 0;
+
+	protected function setUp()
+	{
+		$this->headers_length = strLen($this->headers) - 1;
+		$this->headers_length_exceeded = strLen($this->headers_exceeded) - 1;
+	}
+
+
 	/** Checks if exception will be raised in case if
 	 *  returned meta code is different than 200
 	 */
 	public function testRaiseException() {
 		$handler = new Postmen('', '');
 
-		$curl_response = '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}';
+		$curl_response = $this->headers . '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}';
 
 		$mock_curl = new PHPUnit_Extensions_MockFunction('curl_exec', $handler);
 		$mock_curl->expects($this->atLeastOnce() )->will($this->returnValue($curl_response));
+
+		$mock_curl_length = new PHPUnit_Extensions_MockFunction('curl_getinfo', $handler);
+		$mock_curl_length->expects($this->atLeastOnce() )->will($this->returnValue($this->headers_length));
 
 		try {
 			$handler->get('labels', '');
@@ -31,10 +57,13 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 		$exceptionClass = get_class(new PostmenException('', 200, '', ''));
 		$this->setExpectedException($exceptionClass);
 
-		$curl_response = 'THIS STRING IS NOT A VALID JSON OBJECT';
+		$curl_response = $this->headers . 'THIS STRING IS NOT A VALID JSON OBJECT';
 
 		$mock_curl = new PHPUnit_Extensions_MockFunction('curl_exec', $handler);
 		$mock_curl->expects($this->atLeastOnce() )->will($this->returnValue($curl_response));
+
+		$mock_curl_length = new PHPUnit_Extensions_MockFunction('curl_getinfo', $handler);
+		$mock_curl_length->expects($this->atLeastOnce() )->will($this->returnValue($this->headers_length));
 
 		$result = $handler->get('labels', '');
 	}
@@ -45,10 +74,13 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 	public function testSafeModeEnabled() {
 		$handler = new Postmen('', '');
 
-		$curl_response = 'NOT VALID JSON, BUT EXCEPTION IS NOT GOING TO BE RAISED';
+		$curl_response = $this->headers . 'NOT VALID JSON, BUT EXCEPTION IS NOT GOING TO BE RAISED';
 
 		$mock_curl = new PHPUnit_Extensions_MockFunction('curl_exec', $handler);
 		$mock_curl->expects($this->atLeastOnce() )->will($this->returnValue($curl_response));
+
+		$mock_curl_length = new PHPUnit_Extensions_MockFunction('curl_getinfo', $handler);
+		$mock_curl_length->expects($this->atLeastOnce() )->will($this->returnValue($this->headers_length));
 
 		$result = $handler->get('labels', '', array('safe' => true));
 		$exception = $handler->getError();
@@ -62,15 +94,18 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 	/** Checks if meta code different than 200 raises an exception
 	 *  verifies if there is a match on exception code and message
 	 */
-	public function testRateLimitExceeded() {
+	public function testRaiseExceeded() {
 		$message = 'THIS IS ERROR MESSAGE RETURNED FROM API';
 		$code = 999;
 		$handler = new Postmen('', '');
 
-		$curl_response = '{"meta":{"code":' . $code . ',"message":"' . $message . '","details":[]},"data":{}}';
+		$curl_response = $this->headers . '{"meta":{"code":' . $code . ',"message":"' . $message . '","details":[]},"data":{}}';
 
 		$mock_curl = new PHPUnit_Extensions_MockFunction('curl_exec', $handler);
 		$mock_curl->expects($this->atLeastOnce())->will($this->returnValue($curl_response));
+
+		$mock_curl_length = new PHPUnit_Extensions_MockFunction('curl_getinfo', $handler);
+		$mock_curl_length->expects($this->atLeastOnce() )->will($this->returnValue($this->headers_length));
 
 		try{
 			$result = $handler->get('labels', '');
@@ -87,7 +122,7 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 	public function testRetryCurl() {
 		$handler = new Postmen('', '', array('retry' => true));
 
-		$curl_response = '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}';
+		$curl_response = $this->headers . '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}';
 
 		$mock_curl = new PHPUnit_Extensions_MockFunction('curl_exec', $handler);
 		$mock_curl->expects($this->any())->will($this->returnValue($curl_response));
@@ -96,6 +131,9 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 		$mock_error->expects($this->at(0))->will($this->returnValue(true));
 		$mock_error->expects($this->at(1))->will($this->returnValue(true));
 		$mock_error->expects($this->at(2))->will($this->returnValue(false));
+
+		$mock_curl_length = new PHPUnit_Extensions_MockFunction('curl_getinfo', $handler);
+		$mock_curl_length->expects($this->atLeastOnce() )->will($this->returnValue($this->headers_length));
 
 		date_default_timezone_set('UTC');
 		$before = date_create();
@@ -112,10 +150,13 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 	public function testRetryMaxAttempts() {
 		$handler = new Postmen('', '', array('retry' => true));
 
-		$curl_response = '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}';
+		$curl_response = $this->headers . '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}';
 
 		$mock_curl = new PHPUnit_Extensions_MockFunction('curl_exec', $handler);
 		$mock_curl->expects($this->any())->will($this->returnValue($curl_response));
+
+		$mock_curl_length = new PHPUnit_Extensions_MockFunction('curl_getinfo', $handler);
+		$mock_curl_length->expects($this->atLeastOnce() )->will($this->returnValue($this->headers_length));
 
 		$mock_error = new PHPUnit_Extensions_MockFunction('curl_error', $handler);
 		$mock_error->expects($this->at(0))->will($this->returnValue(true));
@@ -136,10 +177,13 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 	public function testRetryMaxAttemptsExceeded() {
 		$handler = new Postmen('', '', array('retry' => true));
 
-		$curl_response = '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}';
+		$curl_response = $this->headers . '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}';
 
 		$mock_curl = new PHPUnit_Extensions_MockFunction('curl_exec', $handler);
 		$mock_curl->expects($this->any())->will($this->returnValue($curl_response));
+
+		$mock_curl_length = new PHPUnit_Extensions_MockFunction('curl_getinfo', $handler);
+		$mock_curl_length->expects($this->atLeastOnce() )->will($this->returnValue($this->headers_length));
 
 		$mock_error = new PHPUnit_Extensions_MockFunction('curl_error', $handler);
 		$mock_error->expects($this->at(0))->will($this->returnValue(true));
@@ -163,8 +207,11 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 	public function testRetryPostmen() {
 		$handler = new Postmen('', '', array('retry' => true));
 
-		$curl_response_failed = '{"meta":{"code":500,"message":"error","retryable":true,"details":[]},"data":{}}';
-		$curl_response_ok = '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}';
+		$curl_response_failed = $this->headers . '{"meta":{"code":500,"message":"error","retryable":true,"details":[]},"data":{}}';
+		$curl_response_ok = $this->headers . '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}';
+
+		$mock_curl_length = new PHPUnit_Extensions_MockFunction('curl_getinfo', $handler);
+		$mock_curl_length->expects($this->atLeastOnce() )->will($this->returnValue($this->headers_length));
 
 		$mock_curl = new PHPUnit_Extensions_MockFunction('curl_exec', $handler);
 		$mock_curl->expects($this->at(0))->will($this->returnValue($curl_response_failed));
@@ -185,7 +232,7 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 	public function testNotRetryPostmen() {
 		$handler = new Postmen('', '', array('retry' => true));
 
-		$curl_response_failed = '{"meta":{"code":500,"message":"error","retryable":false,"details":[]},"data":{}}';
+		$curl_response_failed = $this->headers . '{"meta":{"code":500,"message":"error","retryable":false,"details":[]},"data":{}}';
 
 		$mock_curl = new PHPUnit_Extensions_MockFunction('curl_exec', $handler);
 		$mock_curl->expects($this->at(0))->will($this->returnValue($curl_response_failed));
@@ -196,8 +243,56 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 		$mock_sleep = new PHPUnit_Extensions_MockFunction('sleep', $handler);
 		$mock_sleep->expects($this->any())->will($this->returnValue(1));
 
+		$mock_curl_length = new PHPUnit_Extensions_MockFunction('curl_getinfo', $handler);
+		$mock_curl_length->expects($this->atLeastOnce() )->will($this->returnValue($this->headers_length));
+
 		$exceptionClass = get_class(new PostmenException('', 200, '', ''));
 		$this->setExpectedException($exceptionClass);
+
+		$result = $handler->get('labels', '');
+	}
+
+	/** test automatic rate limiting
+	 *  this should raise an exception at second call
+	 */
+	public function testRateLimitExceeded() {
+		$handler = new Postmen('', '', array('retry' => false, 'rate' => false));
+
+		$curl_response_failed = $this->headers_exceeded . '{"meta":{"code":429,"message":"Rate limit exceeded","retryable":false,"details":[]},"data":{}}';
+
+		$mock_curl = new PHPUnit_Extensions_MockFunction('curl_exec', $handler);
+		$mock_curl->expects($this->at(0))->will($this->returnValue($curl_response_failed));
+
+		$mock_sleep = new PHPUnit_Extensions_MockFunction('sleep', $handler);
+		$mock_sleep->expects($this->never());
+
+		$mock_curl_length = new PHPUnit_Extensions_MockFunction('curl_getinfo', $handler);
+		$mock_curl_length->expects($this->at(0) )->will($this->returnValue($this->headers_length_exceeded));
+
+		$exceptionClass = get_class(new PostmenException('', 200, '', ''));
+		$this->setExpectedException($exceptionClass);
+
+		$result = $handler->get('labels', '');
+	}
+
+	/** test automatic rate limiting
+	 *  this should not raise an exception, just wait instead
+	 */
+	public function testRateLimit() {
+		$handler = new Postmen('', '', array('retry' => false, 'safe' => true));
+
+		$curl_response_failed = $this->headers_exceeded . '{"meta":{"code":429,"message":"Rate limit exceeded","retryable":false,"details":[]},"data":{}}';
+		$curl_response_success = $this->headers . '{"meta":{"code":200,"message":"OK","retryable":false,"details":[]},"data":{}}';
+
+		$mock_curl = new PHPUnit_Extensions_MockFunction('curl_exec', $handler);
+		$mock_curl->expects($this->at(0))->will($this->returnValue($curl_response_failed));
+		$mock_curl->expects($this->at(1))->will($this->returnValue($curl_response_success));
+
+		$mock_sleep = new PHPUnit_Extensions_MockFunction('sleep', $handler);
+		$mock_sleep->expects($this->once())->will($this->returnValue(1));
+
+		$mock_curl_length = new PHPUnit_Extensions_MockFunction('curl_getinfo', $handler);
+		$mock_curl_length->expects($this->atLeastOnce() )->will($this->returnValue($this->headers_length_exceeded));
 
 		$result = $handler->get('labels', '');
 	}
@@ -325,7 +420,11 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 		} catch(Exception $e) {
 			$this->fail('CURLOPT_URL is not correct');
 		}
-
+		try {
+			$this->assertEquals($del[CURLOPT_HEADER], true);
+		} catch(Exception $e) {
+			$this->fail('CURLOPT_HEADER must be set to true as header is required for rate limiting');
+		}
 	}
 
 	/**
@@ -362,11 +461,6 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 			$this->assertEquals($params[CURLOPT_PROXYPORT], $proxy_port);
 		} catch(Exception $e) {
 			$this->fail('CURLOPT_PROXYPORT must contain the port number');
-		}
-		try {
-			$this->assertEquals($params[CURLOPT_HEADER], false);
-		} catch(Exception $e) {
-			$this->fail('CURLOPT_HEADER must be set to false as it will cause JSON serialization issues');
 		}
 		try {
 			$this->assertEquals($params[CURLOPT_FOLLOWLOCATION], true);
@@ -438,6 +532,28 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 		$this->assertEquals($handler->generateURL($base, $path, 'GET', $query), $expected);
 		$expected = 'http://example.com/path';
 		$this->assertEquals($handler->generateURL($base, $path, 'POST', $query), $expected);
+	}
+
+	/** test if after passing PHP array object as request body
+	 *  will query contain stringified JSON data
+	 */
+	public function testBodyJSON() {
+		$handler = new Postmen('', 'region');
+
+		$body = array(
+			"key" => "value",
+			"key1" => "value1"
+		);
+		
+		$parameters = array(
+			'body' => $body
+		);
+		$ret = $handler->buildCurlParams('some_method', 'some_path', $parameters);
+		try {
+			$this->assertEquals($ret[CURLOPT_POSTFIELDS], '{"key":"value","key1":"value1"}');
+		} catch(Exception $e) {
+			$this->fail('CURLOPT_POSTFIELDS must contain JSON object of input PHP array');
+		}
 	}
 }
 ?>

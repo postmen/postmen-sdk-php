@@ -330,13 +330,32 @@ A raw JSON string response returned fromfined in an array object containing `hos
 $api = new Postmen($key, $region);
 $json_string = $api->get('rates', $id, array('raw' => true));
 ```
+
+##### Automatic retry if exception occurs
+If retry option is activated, in case of `retryable` error from Postmen API, this SDK will automatically try to make a call again, at most 5 times, each time doubling waiting time which start at 1s.
+
+```php
+$api = new Postmen($key, $region);
+$json_string = $api->get('rates', $id, array('retry' => true));
+```
+##### Rate limiting
+Number of authorized requests per quantity of time is limited, this SDK can either throw an exception with error code `429` either wait number of seconds needed to perform the call and this depends on `rate` optional parameter.
+
+Rate by default is set to TRUE, so if you want to avoid long running scripts and prefer to catch an exception and handle it yourself just manually set it to FALSE.
+
+```php
+$api = new Postmen($key, $region);
+$json_string = $api->get('rates', $id, array('rate' => true));
+```
+
+
 ## Testing
 If you contribute it is recommended to run automated test before you pull request your changes.
 
+`phpunit --bootstrap tests/bootstrap.php tests/Postmen.php`
+
 ## The License (MIT)
 Released under the MIT license. See the LICENSE file for the complete wording.
-
-`phpunit --bootstrap tests/bootstrap.php tests/Postmen.php`
 
 ## Contributor
 - Sunny Chow - [view contributions](https://github.com/postmen/sdk-php/commits?author=sunnychow)
