@@ -54,6 +54,8 @@ $api = new Postmen($key, $region);
 
 Minimum PHP version required to use this SDK is `5.2` for just using the SDK. For development PHP `5.6` is required (to run automated tests).
 
+Tested on PHP 5.3, 5.4, 5.5, 5.6.
+
 ## Usage
 
 #### Rates
