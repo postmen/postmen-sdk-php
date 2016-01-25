@@ -14,3 +14,4 @@ php:
         - 7.0
         - hhvm
 script: phpunit --bootstrap tests/bootstrap.php tests/Postmen.php
+
