@@ -1,6 +1,6 @@
 language: php
 before_install:
-        - /home/travis/.phpenv/versions/5.3/bin/composer self-update
+        - php /home/travis/.phpenv/versions/5.3/bin/composer.phar self-update
 php:
         - 5.3
         - 5.4
