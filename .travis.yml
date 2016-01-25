@@ -1,0 +1,13 @@
+before_install:
+        - pecl install runkit
+        - phpenv config-add travis.php.ini
+        - composer self-update
+        - composer install
+language: php
+php:
+        - 5.3
+        - 5.4
+        - 5.5
+        - 5.6
+script: phpunit --bootstrap tests/bootstrap.php tests/Postmen.php
+
