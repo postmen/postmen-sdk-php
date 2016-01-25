@@ -6,23 +6,24 @@ use Postmen\FakePostmen;
 
 class PostmenTest extends PHPUnit_Framework_TestCase {
 
-	private $headers =
-		"Date: Fri, 22 Jan 2016 04:05:30 GMT\r\n" .
-		"X-RateLimit-Limit: 10\r\n" .
-		"X-RateLimit-Remaining: 10\r\n" .
-		"X-RateLimit-Reset: 1453435538946\r\n";
-
-	private $headers_exceeded =
-		"Date: Fri, 22 Jan 2016 04:05:30 GMT\r\n" .
-		"X-RateLimit-Limit: 10\r\n" .
-		"X-RateLimit-Remaining: 0\r\n" .
-		"X-RateLimit-Reset: 1453435538946\r\n";
+	private $headers = "";
+	private $headers_exceeded = "";
 
 	private $headers_length = 0;
 	private $headers_length_exceeded = 0;
 
 	protected function setUp()
 	{
+		$this->headers  = "Date: Fri, 22 Jan 2016 04:05:30 GMT\r\n";
+		$this->headers .= "X-RateLimit-Limit: 10\r\n";
+		$this->headers .= "X-RateLimit-Remaining: 10\r\n";
+		$this->headers .= "X-RateLimit-Reset: 1453435538946\r\n";
+
+		$this->headers_exceeded  = "Date: Fri, 22 Jan 2016 04:05:30 GMT\r\n";
+		$this->headers_exceeded .= "X-RateLimit-Limit: 10\r\n";
+		$this->headers_exceeded .= "X-RateLimit-Remaining: 0\r\n";
+		$this->headers_exceeded .= "X-RateLimit-Reset: 1453435538946\r\n";
+
 		$this->headers_length = strLen($this->headers) - 1;
 		$this->headers_length_exceeded = strLen($this->headers_exceeded) - 1;
 	}
