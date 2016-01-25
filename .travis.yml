@@ -1,4 +1,5 @@
 before_install:
+        - pecl install https://github.com/downloads/zenovich/runkit/runkit-1.0.3.tgz
         - php /home/travis/.phpenv/versions/5.3/bin/composer self-update
         - php /home/travis/.phpenv/versions/5.4/bin/composer self-update
         - php /home/travis/.phpenv/versions/5.5/bin/composer self-update
