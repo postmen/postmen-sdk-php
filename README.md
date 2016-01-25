@@ -250,7 +250,7 @@ $payload = array (
         	'id' => '00000000-0000-0000-0000-000000000000',
 	)
 );
-$result = $api->create($payload);
+$result = $api->create('manifests', $payload);
 ```
 ##### List all manifests
 ```php
@@ -327,7 +327,7 @@ $result = $api->get('rates', $id, array('proxy' => $proxy));
 ```
 
 ##### Raw JSON response
-A raw JSON string response returned fromfined in an array object containing `host`, `port`, `username, example as follows:
+A raw JSON string response returned fromfined in an array object containing `host`, `port`, `username`, example as follows:
 ```php
 $api = new Postmen($key, $region);
 $json_string = $api->get('rates', $id, array('raw' => true));

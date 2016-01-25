@@ -16,7 +16,7 @@ class PostmenException extends Exception
 	
 	public function __construct($message, $code, $retryable, $details, Exception $previous = null) {
 		$this->retryable = $retryable;
-		$this->details = array();
+		$this->details = $details;
 		parent::__construct($message, $code, $previous);
 	}
 

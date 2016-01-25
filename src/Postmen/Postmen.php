@@ -176,7 +176,7 @@ class Postmen
 
 	public function processCurlResponse($response, $safe, $raw, $call) {
 		$parsed = json_decode($response);
-		if ($parsed != NULL) {
+		if ($parsed) {
 			if($raw) {
 				return $response;
 			}
@@ -289,7 +289,9 @@ class Postmen
 	}
 
 	public function create($resource, $payload, $parameters = array()) {
-		$payload['async'] = false;
+		if (!is_string($payload)) {
+			$payload['async'] = false;
+		}
 		return $this->callPOST("/v3/$resource", $payload, $parameters);
 	}
 
