@@ -1,5 +1,6 @@
 before_install:
         - pecl install runkit
+        - phpenv config-add travis.php.ini
         - php /home/travis/.phpenv/versions/5.3/bin/composer self-update
         - php /home/travis/.phpenv/versions/5.4/bin/composer self-update
         - php /home/travis/.phpenv/versions/5.5/bin/composer self-update
