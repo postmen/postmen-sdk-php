@@ -34,7 +34,7 @@ class Postmen
 		if (!isset($api_key)) {
 			throw new PostmenException('API key is required', 999, false);
 		}
-		$this->_version = "0.2.0";
+		$this->_version = "0.3.0";
 		$this->_api_key = $api_key;
 		if (isset($config['proxy'])) {
 			$this->_proxy = $config['proxy'];
@@ -164,12 +164,6 @@ class Postmen
 		);
 		if ($err) {
 			$error = new PostmenException("failed to request: $err" , 100, true, array());
-			if ($retry) {
-				$retried = $this->handleRetry($call);
-				if ($retried !== NULL) {
-					return $retried;
-				}
-			}
 			if ($safe) {
 				$this->_error = $error;
 				return undefined;

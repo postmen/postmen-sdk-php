@@ -116,10 +116,9 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 		}
 	}
 
-	/** Checks if will retry after delay
-	 *  if curl failes to process the request
+	/** expects not to retry if curl error occurs
 	 */
-	public function testRetryCurl() {
+	public function testNotRetryCurl() {
 		$handler = new Postmen('', '', array('retry' => true));
 
 		$curl_response = $this->headers . '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}';
@@ -127,13 +126,45 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 		$mock_curl = new PHPUnit_Extensions_MockFunction('curl_exec', $handler);
 		$mock_curl->expects($this->any())->will($this->returnValue($curl_response));
 
+		$mock_curl_length = new PHPUnit_Extensions_MockFunction('curl_getinfo', $handler);
+		$mock_curl_length->expects($this->any() )->will($this->returnValue($this->headers_length));
+
 		$mock_error = new PHPUnit_Extensions_MockFunction('curl_error', $handler);
-		$mock_error->expects($this->at(0))->will($this->returnValue(true));
-		$mock_error->expects($this->at(1))->will($this->returnValue(true));
+		$mock_error->expects($this->any())->will($this->returnValue(true));
+
+		$exceptionClass = get_class(new PostmenException('', 200, '', ''));
+		$this->setExpectedException($exceptionClass);
+
+		$mock_sleep = new PHPUnit_Extensions_MockFunction('sleep', $handler);
+		$mock_sleep->expects($this->never());
+
+		$result = $handler->get('labels', '');
+	}
+
+
+	/** Checks if there will be 3 seconds long
+	 *  delay if retryable error is returned at
+	 *  second attempt, tests if delay time
+	 *  increments correctly
+	 */
+	public function testRetryDelay() {
+		$handler = new Postmen('', '', array('retry' => true));
+
+		$curl_response_failed = $this->headers . '{"meta":{"code":500,"message":"error","retryable":true,"details":[]},"data":{}}';
+		$curl_response_ok = $this->headers . '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}';
+
+		$mock_curl = new PHPUnit_Extensions_MockFunction('curl_exec', $handler);
+		$mock_curl->expects($this->at(0))->will($this->returnValue($curl_response_failed));
+		$mock_curl->expects($this->at(1))->will($this->returnValue($curl_response_failed));
+		$mock_curl->expects($this->at(2))->will($this->returnValue($curl_response_ok));
+
+		$mock_error = new PHPUnit_Extensions_MockFunction('curl_error', $handler);
+		$mock_error->expects($this->at(0))->will($this->returnValue(false));
+		$mock_error->expects($this->at(1))->will($this->returnValue(false));
 		$mock_error->expects($this->at(2))->will($this->returnValue(false));
 
 		$mock_curl_length = new PHPUnit_Extensions_MockFunction('curl_getinfo', $handler);
-		$mock_curl_length->expects($this->atLeastOnce() )->will($this->returnValue($this->headers_length));
+		$mock_curl_length->expects($this->any())->will($this->returnValue($this->headers_length));
 
 		date_default_timezone_set('UTC');
 		$before = date_create();
@@ -150,20 +181,21 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 	public function testRetryMaxAttempts() {
 		$handler = new Postmen('', '', array('retry' => true));
 
-		$curl_response = $this->headers . '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}';
+		$curl_response_failed = $this->headers . '{"meta":{"code":500,"message":"error","retryable":true,"details":[]},"data":{}}';
+		$curl_response_ok = $this->headers . '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}';
 
 		$mock_curl = new PHPUnit_Extensions_MockFunction('curl_exec', $handler);
-		$mock_curl->expects($this->any())->will($this->returnValue($curl_response));
+		$mock_curl->expects($this->at(0))->will($this->returnValue($curl_response_failed));
+		$mock_curl->expects($this->at(1))->will($this->returnValue($curl_response_failed));
+		$mock_curl->expects($this->at(2))->will($this->returnValue($curl_response_failed));
+		$mock_curl->expects($this->at(3))->will($this->returnValue($curl_response_failed));
+		$mock_curl->expects($this->at(4))->will($this->returnValue($curl_response_ok));
 
 		$mock_curl_length = new PHPUnit_Extensions_MockFunction('curl_getinfo', $handler);
-		$mock_curl_length->expects($this->atLeastOnce() )->will($this->returnValue($this->headers_length));
+		$mock_curl_length->expects($this->any())->will($this->returnValue($this->headers_length));
 
 		$mock_error = new PHPUnit_Extensions_MockFunction('curl_error', $handler);
-		$mock_error->expects($this->at(0))->will($this->returnValue(true));
-		$mock_error->expects($this->at(1))->will($this->returnValue(true));
-		$mock_error->expects($this->at(2))->will($this->returnValue(true));
-		$mock_error->expects($this->at(3))->will($this->returnValue(true));
-		$mock_error->expects($this->at(4))->will($this->returnValue(false));
+		$mock_error->expects($this->any())->will($this->returnValue(false));
 
 		$mock_sleep = new PHPUnit_Extensions_MockFunction('sleep', $handler);
 		$mock_sleep->expects($this->any())->will($this->returnValue(1));
@@ -177,20 +209,20 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 	public function testRetryMaxAttemptsExceeded() {
 		$handler = new Postmen('', '', array('retry' => true));
 
-		$curl_response = $this->headers . '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}';
+		$curl_response_failed = $this->headers . '{"meta":{"code":500,"message":"error","retryable":true,"details":[]},"data":{}}';
 
 		$mock_curl = new PHPUnit_Extensions_MockFunction('curl_exec', $handler);
-		$mock_curl->expects($this->any())->will($this->returnValue($curl_response));
+		$mock_curl->expects($this->at(0))->will($this->returnValue($curl_response_failed));
+		$mock_curl->expects($this->at(1))->will($this->returnValue($curl_response_failed));
+		$mock_curl->expects($this->at(2))->will($this->returnValue($curl_response_failed));
+		$mock_curl->expects($this->at(3))->will($this->returnValue($curl_response_failed));
+		$mock_curl->expects($this->at(4))->will($this->returnValue($curl_response_failed));
 
 		$mock_curl_length = new PHPUnit_Extensions_MockFunction('curl_getinfo', $handler);
-		$mock_curl_length->expects($this->atLeastOnce() )->will($this->returnValue($this->headers_length));
+		$mock_curl_length->expects($this->any() )->will($this->returnValue($this->headers_length));
 
 		$mock_error = new PHPUnit_Extensions_MockFunction('curl_error', $handler);
-		$mock_error->expects($this->at(0))->will($this->returnValue(true));
-		$mock_error->expects($this->at(1))->will($this->returnValue(true));
-		$mock_error->expects($this->at(2))->will($this->returnValue(true));
-		$mock_error->expects($this->at(3))->will($this->returnValue(true));
-		$mock_error->expects($this->at(4))->will($this->returnValue(true));
+		$mock_error->expects($this->any())->will($this->returnValue(false));
 
 		$exceptionClass = get_class(new PostmenException('', 200, '', ''));
 		$this->setExpectedException($exceptionClass);
