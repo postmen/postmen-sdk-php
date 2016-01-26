@@ -4,29 +4,29 @@ This extension helps developers to integrate with [Postmen](https://www.postmen.
 
 #### Contents
 
-- [Introduction](#Intoduction)
-		- [Contents](#)
-- [Installation](#Installation)
-		- [Manual installation](#Manual installation)
-		- [Using Composer](#Using Composer)
-		- [Requirements](#Requirements)
-- [Quick Start](#Quick Start)
-- [Error Handling](#Error Handling)
-- [Examples](#Examples)
-- [Handler constructor documentation](#Handler constructor documentation)
-- [Member functions documentation](#Member functions documentation)
-	- [.create](#.create)
-	- [.get](#.get)
-	- [.cancel](#.cancel)
-	- [.callGET](#.callGET)
-	- [.callPOST](#.callPOST)
-	- [.callPUT](#.callPUT)
-	- [.callDELETE](#.callDELETE)
-- [Automatic retry on retryable error](#Automatic retry on retryable error)
-- [Automatic rate limiting](#Automatic rate limiting)
-- [Testing](#Testing)
-- [Licence](#Licence)
-- [Contributors](#Contributors)
+- [Introduction](#intoduction)
+		- [Contents](#contents)
+- [Installation](#installation)
+		- [Manual installation](#manual installation)
+		- [Using Composer](#using Composer)
+		- [Requirements](#requirements)
+- [Quick Start](#quick Start)
+- [Error Handling](#error Handling)
+- [Examples](#examples)
+- [Handler constructor documentation](#handler constructor documentation)
+- [Member functions documentation](#member functions documentation)
+	- [.create](#create)
+	- [.get](#get)
+	- [.cancelLabel](#cancelLabel)
+	- [.callGET](#callGET)
+	- [.callPOST](#callPOST)
+	- [.callPUT](#callPUT)
+	- [.callDELETE](#callDELETE)
+- [Automatic retry on retryable error](#automatic retry on retryable error)
+- [Automatic rate limiting](#automatic rate limiting)
+- [Testing](#testing)
+- [Licence](#licence)
+- [Contributors](#contributors)
 
 ## Installation
 #### Manual installation
@@ -77,6 +77,8 @@ Tested on PHP 5.3, 5.4, 5.5, 5.6.
 
 ## Quick Start
 
+Information about how to get API key and how to choose region can be found in the documentation under [this](https://docs.postmen.com/overview.html) link.
+
 ```php
 use Postmen\Postmen;
 
@@ -101,6 +103,19 @@ try {
 ## Error Handling
 
 Please refer to [error.php](https://github.com/postmen/postmen-sdk-php/blob/master/examples/error.php) file which contains full example of how errors should be handled using this SDK.
+
+Our custom exception type contains following methods.
+
+| Method            | Return type | Description                                                                  |
+|-------------------|-------------|------------------------------------------------------------------------------|
+| .getCode()        | Integer     | Error code (eg, 4104)                                                        |
+| .isRetryable()    | Boolean     | Indicates if error is retryable or not                                       |
+| .getMessage()     | String      | Error message (eg, "The request was invalid or cannot be otherwise served.") |
+| .getDetails()     | Array       | Array of error details (eg, "Destination country must be RUS or KAZ"         |
+
+In case of using `safe mode` it is possible to retrieve error without `try...catch...` blocks using `$api->getError()` method, to learn more about this please refer to following [line](https://github.com/postmen/postmen-sdk-php/blob/master/examples/error.php#L29) example.
+
+More info about Postmen errors can be found in the [documentation](https://docs.postmen.com/errors.html).
 
 ## Examples
 
@@ -164,7 +179,7 @@ Creates a `$model` object based on `$payload`, returns an `Object` of created re
 |----------|------|------------------|---------|---------------------------------------------------|
 | $model   | YES  | String           | N / A   | New object model ('rates', 'labels', 'manifests') |
 | $payload | YES  | Object or String | N / A   | Payload according to API                          |
-| $options | NO   | Object           | NULL    | Options as documented [above](#Constructor)       |
+| $options | NO   | Object           | NULL    | Options as documented [above](#constructor)       |
 
 **Example:** [labels_create.php](https://github.com/postmen/postmen-sdk-php/blob/master/examples/labels_create.php)
 
@@ -176,18 +191,18 @@ Retrieves single or list of `$model` objects, depending if `$id` of particular o
 |----------|------|------------------|---------|---------------------------------------------------|
 | $model   | YES  | String           | N / A   | Object model ('rates', 'labels', 'manifests')     |
 | $id      | YES  | String           | N / A   | ID of particular instance of object               |
-| $options | NO   | Object           | NULL    | Options as documented  [above](#Constructor)      |
+| $options | NO   | Object           | NULL    | Options as documented  [above](#constructor)      |
 
 **Example:** [manifests_retrieve.php](https://github.com/postmen/postmen-sdk-php/blob/master/examples/manifests_retrieve.php)
 
-### .cancel
+### .cancelLabel
 
 Cancels a label, accepts `$id` of a label, returns an `Object` containg API response.
 
 | Argument | Req? | Type             | Default | Description                                       |
 |----------|------|------------------|---------|---------------------------------------------------|
 | $id      | YES  | String           | N / A   | ID of a label                                     |
-| $options | NO   | Object           | NULL    | Options as documented  [above](#Constructor)      |
+| $options | NO   | Object           | NULL    | Options as documented  [above](#constructor)      |
 
 **Example:** [cancel_label.php](https://github.com/postmen/postmen-sdk-php/blob/master/examples/cancel_label.php)
 
@@ -198,7 +213,7 @@ Performs HTTP GET request, accepts `$path` representing API URL path, returns an
 | Argument | Req? | Type             | Default | Description                                       |
 |----------|------|------------------|---------|---------------------------------------------------|
 | $path    | YES  | String           | N / A   | url path (eg, '/v3/' for example.com/v3/ )        |
-| $options | NO   | Object           | NULL    | Options as documented  [above](#Constructor)      |
+| $options | NO   | Object           | NULL    | Options as documented  [above](#constructor)      |
 
 ### .callPOST
 
@@ -208,7 +223,7 @@ Performs HTTP POST request, accepts `$path` representing API URL path and `$body
 |----------|------|------------------|---------|---------------------------------------------------|
 | $path    | YES  | String           | N / A   | url path (eg, '/v3/' for example.com/v3/ )        |
 | $body    | YES  | Object or String | N / A   | Body of POST request                              |
-| $options | NO   | Object           | NULL    | Options as documented  [above](#Constructor)      |
+| $options | NO   | Object           | NULL    | Options as documented  [above](#constructor)      |
 
 ### .callPUT
 
@@ -218,7 +233,7 @@ Performs HTTP PUT request, accepts `$path` representing API URL path,  returns a
 |----------|------|------------------|---------|---------------------------------------------------|
 | $path    | YES  | String           | N / A   | url path (eg, '/v3/' for example.com/v3/ )        |
 | $body    | YES  | Object or String | N / A   | Body of PUT request                               |
-| $options | NO   | Object           | NULL    | Options as documented  [above](#Constructor)      |
+| $options | NO   | Object           | NULL    | Options as documented  [above](#constructor)      |
 
 ### .callDELETE
 
@@ -228,7 +243,7 @@ Performs HTTP DELETE request, accepts `$path` representing API URL path,  return
 |----------|------|------------------|---------|---------------------------------------------------|
 | $path    | YES  | String           | N / A   | url path (eg, '/v3/' for example.com/v3/ )        |
 | $body    | YES  | Object or String | N / A   | Body of DELETE request                            |
-| $options | NO   | Object           | NULL    | Options as documented  [above](#Constructor)      |
+| $options | NO   | Object           | NULL    | Options as documented  [above](#constructor)      |
 
 ## Automatic retry on retryable error
 
