@@ -81,7 +81,7 @@ try {
 
 ## Error Handling
 
-Please refer to [error.php](https://github.com/postmen/postmen-sdk-php/blog/master/examples/error.php) file which contains full example of how errors should be handled using this SDK.
+Please refer to [error.php](https://github.com/postmen/postmen-sdk-php/blob/master/examples/error.php) file which contains full example of how errors should be handled using this SDK.
 
 ## Examples
 
