@@ -1,11 +1,11 @@
 ## Introduction
-PHP for Postmen API.
-This extension helps developers to integrate with Postmen easily.
+PHP for [Postmen API](https://docs.postmen.com/).
+This extension helps developers to integrate with [Postmen](https://www.postmen.com/) easily.
 
 #### Contents
 
 - [Introduction](#)
-	- [Contents](#)
+		- [Contents](#)
 - [Installation](#)
 		- [Manual installation](#)
 		- [Using Composer](#)
