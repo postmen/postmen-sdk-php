@@ -58,21 +58,30 @@ Tested on PHP 5.3, 5.4, 5.5, 5.6.
 
 ## Quick Start
 
-## Error Handling
-
-Please refer to [error.php](https://github.com/postmen/postmen-sdk-php/blog/master/examples/error.php) file which contains full example.
-
 ```php
+use Postmen\Postmen;
+
+$key = '';	// your API key, if you don't have one, generate!
+$region = '';	// region of Postmen instance you are going to access
+
+// initiate Postmen handler object
+$api = new Postmen($key, $region);
+
 try {
-	print_r($api->get('labels'));
+	// as an example we request all the labels
+	$result $api->get('labels');
 } catch (exception $e) {
-	echo "code: " . $e->getCode() . "\n";
-	echo "message: " . $e->getMessage() . "\n";
-	echo "array with details:\n";
-	print_r($e->getDetails());
-	echo "\n";
+	// if error occurs we can access all
+	// the details in following way
+	echo $e->getCode() . "\n";	// error code
+	echo $e->getMessage() . "\n";	// error message
+	print_r($e->getDetails());	// details, array that can help if our payload is incorrect
 }
 ```
+
+## Error Handling
+
+Please refer to [error.php](https://github.com/postmen/postmen-sdk-php/blog/master/examples/error.php) file which contains full example of how errors should be handled using this SDK.
 
 ## Examples
 
@@ -86,11 +95,11 @@ try {
 
 | File         | Description                                                      |
 |--------------|------------------------------------------------------------------|
-| proxy.php    | Connecting to Postmen via proxy server                           |
-| error.php    | Different ways of handling errors from Postmen                   |
-| rate.php     | How to enable / disable automatic rate limiting                  |
-| retry.php    | How to enable / disable automatic retry on error                 |
-| response.php | Shows how to specify output type as array object or raw response |
+| [proxy.php](https://github.com/postmen/postmen-sdk-php/blob/master/examples/proxy.php)    | Connecting to Postmen via proxy server                           |
+| [error.php](https://github.com/postmen/postmen-sdk-php/blob/master/examples/error.php)    | Different ways of handling errors from Postmen                   |
+| [rate.php](https://github.com/postmen/postmen-sdk-php/blob/master/examples/rate.php)     | How to enable / disable automatic rate limiting                  |
+| [retry.php](https://github.com/postmen/postmen-sdk-php/blob/master/examples/retry.php)    | How to enable / disable automatic retry on error                 |
+| [response.php](https://github.com/postmen/postmen-sdk-php/blob/master/examples/response.php) | Shows how to specify output type as array object or raw response |
 
 ## Handler constructor documentation
 todo
