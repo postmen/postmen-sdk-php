@@ -46,6 +46,7 @@ class Postmen
 		} else {
 			$this->_url = "https://$region-api.postmen.com";
 		}
+		$this->_retry = true;
 		if (isset($config['retry'])) {
 			$this->_retry = $config['retry'];
 		}
