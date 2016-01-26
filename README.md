@@ -77,6 +77,8 @@ Tested on PHP 5.3, 5.4, 5.5, 5.6.
 
 ## Quick Start
 
+Information about how to get API key and how to choose region can be found in the documentation under [this](https://docs.postmen.com/overview.html) link.
+
 ```php
 use Postmen\Postmen;
 
@@ -111,7 +113,7 @@ Our custom exception type contains following methods.
 | .getMessage()     | String      | Error message (eg, "The request was invalid or cannot be otherwise served.") |
 | .getDetails()     | Array       | Array of error details (eg, "Destination country must be RUS or KAZ"         |
 
-In case of using `safe mode` it is possible to retrieve error without `try...catch...` blocks using `$api->getError()` method, to learn more about this please refer to following [line](https://github.com/postmen/postmen-sdk-php/blob/master/examples/error.php#29) example.
+In case of using `safe mode` it is possible to retrieve error without `try...catch...` blocks using `$api->getError()` method, to learn more about this please refer to following [line](https://github.com/postmen/postmen-sdk-php/blob/master/examples/error.php#L29) example.
 
 More info about Postmen errors can be found in the [documentation](https://docs.postmen.com/errors.html).
 
