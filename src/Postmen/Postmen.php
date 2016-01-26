@@ -18,6 +18,7 @@ class Postmen
 	private $_version;
 	private $_error;
 	private $_proxy;
+	private $_array;
 
 	// auto-retry if retryable attributes
 	private $_retry;
@@ -34,7 +35,7 @@ class Postmen
 		if (!isset($api_key)) {
 			throw new PostmenException('API key is required', 999, false);
 		}
-		$this->_version = "0.4.0";
+		$this->_version = "0.5.0";
 		$this->_api_key = $api_key;
 		if (isset($config['proxy'])) {
 			$this->_proxy = $config['proxy'];
@@ -54,7 +55,10 @@ class Postmen
 		if (isset($config['rate'])) {
 			$this->_rate = $config['rate'];
 		}
-
+		$this->_array = false;
+		if (isset($config['array'])) {
+			$this->_array = $config['array'];
+		}
 		// set attributes concerning ratelimiting and auto-retry
 		$this->_delay = 1;
 		$this->_retries = 0;
@@ -243,7 +247,12 @@ class Postmen
 			}
 			return $this->handleError($err_message, $err_code, $err_retryable, $err_details, $safe);
 		} else {
-			return $parsed->data;
+			if ($this->_array) {
+				$parsed_array = json_decode(json_encode($parsed), true);
+				return $parsed_array['data'];
+			} else {
+				return $parsed->data;
+			}
 		}
 	}
 

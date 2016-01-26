@@ -588,5 +588,47 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 			$this->fail('CURLOPT_POSTFIELDS must contain JSON object of input PHP array');
 		}
 	}
+
+	/** test array optional parameter
+	 */
+	public function testReturnAsObject() {
+		$handler = new Postmen('', 'region');
+
+		$curl_response = $this->headers . '{"meta":{"code":200,"message":"OK"},"data":{"key1":"value1", "key2":"value2"}}';
+
+		$mock_curl = new PHPUnit_Extensions_MockFunction('curl_exec', $handler);
+		$mock_curl->expects($this->at(0))->will($this->returnValue($curl_response));
+
+		$mock_curl_length = new PHPUnit_Extensions_MockFunction('curl_getinfo', $handler);
+		$mock_curl_length->expects($this->atLeastOnce() )->will($this->returnValue($this->headers_length));
+
+		$result = $handler->get('labels', '');
+
+		$this->assertEquals(isset($result->key1), true);
+		$this->assertEquals(isset($result->key2), true);
+		$this->assertEquals($result->key1, 'value1');
+		$this->assertEquals($result->key2, 'value2');
+	}
+
+	/** test array optional parameter
+	 */
+	public function testReturnAsArray() {
+		$handler = new Postmen('', 'region', array('array' => true));
+
+		$curl_response = $this->headers . '{"meta":{"code":200,"message":"OK"},"data":{"key1":"value1", "key2":"value2"}}';
+
+		$mock_curl = new PHPUnit_Extensions_MockFunction('curl_exec', $handler);
+		$mock_curl->expects($this->at(0))->will($this->returnValue($curl_response));
+
+		$mock_curl_length = new PHPUnit_Extensions_MockFunction('curl_getinfo', $handler);
+		$mock_curl_length->expects($this->atLeastOnce() )->will($this->returnValue($this->headers_length));
+
+		$result = $handler->get('labels', '');
+
+		$this->assertEquals(isset($result['key1']), true);
+		$this->assertEquals(isset($result['key2']), true);
+		$this->assertEquals($result['key1'], 'value1');
+		$this->assertEquals($result['key2'], 'value2');
+	}
 }
 ?>
