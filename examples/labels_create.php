@@ -3,7 +3,13 @@ require('credentials.php');
 
 use Postmen\Postmen;
 
-// TODO update info about the parcel
+// TODO put ID of your shipper account
+$shipper = NULL;
+
+if(!isset($shipper)) {
+	echo "\$shipper is not set, modify file labels_create.php\n";
+}
+
 $parcel = array(
 	'description' => 'info about the parcel',
 	'box_type' => 'custom',
@@ -27,14 +33,13 @@ $parcel = array(
 				'currency' => 'USD',
 			),
 			'weight' => array (
-				'value' => 0.59999999999999998,
+				'value' => 0.6,
 				'unit' => 'kg',
 			),
 		),
 	),
 );
 
-// TODO update your data
 $sender = array (
 	'contact_name' => 'your name',
 	'company_name' => 'name of your company',
@@ -52,7 +57,6 @@ $sender = array (
 	'type' => 'business'
 );
 
-// TODO update data of the receiver
 $receiver = array (
 	'contact_name' => 'Rick McLeod (RM Consulting)',
 	'street1' => '71 Terrace Crescent NE',
@@ -83,8 +87,7 @@ $payload = array (
 	),
 	'shipper_account' => 
 	array (
-		// TODO put ID of your shipper account
-		'id' => '00000000-0000-0000-0000-000000000000',
+		'id' => $shipper,
 	),
 	'shipment' => array (
 		'parcels' => array (
@@ -94,7 +97,16 @@ $payload = array (
 		'ship_to' => $receiver
 	),
 );
-	
-$api = new Postmen($key, $region);
-print_r($api->create('labels', $payload));
+
+try {
+	$api = new Postmen($key, $region);
+	$result = $api->create('labels', $payload);
+	echo "RESULT:\n";
+	print_r($result);
+} catch (exception $e) {
+	echo "ERROR:\n";
+	echo $e->getCode() . "\n";      // error code
+	echo $e->getMessage() . "\n";   // error message
+	print_r($e->getDetails());      // error details
+}
 ?>
