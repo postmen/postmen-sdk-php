@@ -3,15 +3,30 @@ require('credentials.php');
 
 use Postmen\Postmen;
 
+// TODO put your shipper account ID here
+$shipper = NULL;
+
+if(!isset($shipper)) {
+	echo "\$shipper is not set, modify file manifests_create.php\n";
+}
+
 $payload = array (
 	'shipper_account' =>
 	array (
-		// TODO put ID of your shipper account
-		'id' => '00000000-0000-0000-0000-000000000000',
+		'id' => $shipper,
 	),
 	'async' => false
 );
 
-$api = new Postmen($key, $region, array('endpoint' => $endpoint));
-print_r($api->create('manifests', $payload));
+try {
+	$api = new Postmen($key, $region);
+	$result = $api->create('manifests', $payload);
+	echo "RESULT:\n";
+	print_r($result);
+} catch (exception $e) {
+	echo "ERROR:\n";
+	echo $e->getCode() . "\n";      // error code
+	echo $e->getMessage() . "\n";   // error message
+	print_r($e->getDetails());      // error details
+}
 ?>

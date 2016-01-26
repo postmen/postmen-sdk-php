@@ -3,6 +3,13 @@ require('credentials.php');
 
 use Postmen\Postmen;
 
+// TODO put ID of your shipper account
+$shipper = NULL;
+
+if(!isset($shipper)) {
+	echo "\$shipper is not set, modify file rates_calculate.php\n";
+}
+
 $item = array (
 	'description' => 'PS4',
 	'origin_country' => 'JPN',
@@ -42,8 +49,7 @@ $payload = array (
 	'async' => false,
 	'shipper_accounts' => array (
 		0 => array (
-			// TODO put ID of your shipper account
-			'id' => '00000000-0000-0000-0000-000000000000',
+			'id' => $shipper,
 		),
 	),
 	'shipment' => array (
@@ -71,6 +77,15 @@ $payload = array (
 	'is_document' => false
 );
 
-$api = new Postmen($key, $region);
-print_r($api->create('rates', $payload));
+try {
+	$api = new Postmen($key, $region);
+	$result = $api->create('rates', $payload);
+	echo "RESULT:\n";
+	print_r($result);
+} catch (exception $e) {
+	echo "ERROR:\n";
+	echo $e->getCode() . "\n";      // error code
+	echo $e->getMessage() . "\n";   // error message
+	print_r($e->getDetails());      // error details
+}
 ?>
