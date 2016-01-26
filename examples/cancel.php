@@ -7,5 +7,5 @@ use Postmen\Postmen;
 $label = "00000000-0000-0000-0000-000000000000";
 
 $api = new Postmen($key, $region);
-print_r($api->cancel($id));
+print_r($api->cancelLabel($id));
 ?>

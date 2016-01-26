@@ -360,7 +360,7 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 		$this->assertEquals(isset($ret['parameters']['body']['async']), true);
 		$this->assertEquals($ret['parameters']['body']['async'], false);
 
-		$ret = $handler->cancel('1234567890');
+		$ret = $handler->cancelLabel('1234567890');
 		$this->assertEquals($ret['method'], 'POST');
 		$this->assertEquals($ret['path'], '/v3/cancel-labels');
 		$this->assertEquals(count($ret['parameters']), 1);

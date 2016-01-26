@@ -34,7 +34,7 @@ class Postmen
 		if (!isset($api_key)) {
 			throw new PostmenException('API key is required', 999, false);
 		}
-		$this->_version = "0.3.0";
+		$this->_version = "0.4.0";
 		$this->_api_key = $api_key;
 		if (isset($config['proxy'])) {
 			$this->_proxy = $config['proxy'];
@@ -42,10 +42,11 @@ class Postmen
 		if (isset($config['endpoint'])) {
 			$this->_url = $config['endpoint'];
 		} else if (!isset($region)) {
-			throw new PostmenException('missing required field', 200, false);
+			throw new PostmenException('missing required field', 999, false);
 		} else {
 			$this->_url = "https://$region-api.postmen.com";
 		}
+		$this->_retry = true;
 		if (isset($config['retry'])) {
 			$this->_retry = $config['retry'];
 		}
@@ -146,8 +147,14 @@ class Postmen
 			$response_headers_array[$key] = $value;
 		}
 		$headers_date = $response_headers_array['Date'];
-		$calls_left = (int)$response_headers_array['X-RateLimit-Remaining'];
-		$reset = (int)(((int)$response_headers_array['X-RateLimit-Reset']) / 1000);
+		$calls_left = 0;
+		if (isset($response_headers_array['X-RateLimit-Remaining'])) {
+			$calls_left = (int)$response_headers_array['X-RateLimit-Remaining'];
+		}
+		$reset = 0;
+		if (isset($response_headers_array['X-RateLimit-Reset'])) {
+			$reset = (int)(((int)$response_headers_array['X-RateLimit-Reset']) / 1000);
+		}
 		// convert headers date to timestamp, please refer to
 		// https://tools.ietf.org/html/rfc7231#section-7.1.1.1
 		$date = new \DateTime($headers_date, new \DateTimeZone('GMT'));
@@ -295,7 +302,7 @@ class Postmen
 		return $this->callPOST("/v3/$resource", $payload, $parameters);
 	}
 
-	public function cancel($id, $parameters = array()) {
+	public function cancelLabel($id, $parameters = array()) {
 		$payload = array (
 			'label' => array (
 				'id' => $id
