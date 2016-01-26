@@ -266,7 +266,7 @@ $result = $api->get('manifests', $id);
 ##### Cancel a label
 ```php
 $api = new Postmen($key, $region);
-$result = $api->cancel($id);
+$result = $api->cancelLabel($id);
 ```
 ##### List all cancel labels
 ```php

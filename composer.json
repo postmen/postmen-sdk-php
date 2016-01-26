@@ -5,7 +5,7 @@
     "license": "MIT",
     "authors": [],
     "require": {},
-    "version": "0.3.0",
+    "version": "0.4.0",
     "require-dev": {
 	    "phpunit/phpunit": "3.7.*",
 	    "tcz/phpunit-mockfunction": "v1.0.0"
