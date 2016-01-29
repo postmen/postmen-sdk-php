@@ -340,12 +340,10 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 		$ret = $handler->get('resource');
 		$this->assertEquals($ret['method'], 'GET');
 		$this->assertEquals($ret['path'], '/v3/resource');
-		$this->assertEquals(count($ret['parameters']), 0);
 
 		$ret = $handler->get('resource', '1234567890');
 		$this->assertEquals($ret['method'], 'GET');
 		$this->assertEquals($ret['path'], '/v3/resource/1234567890');
-		$this->assertEquals(count($ret['parameters']), 0);
 
 		$payload = array(
 			'something' => 'value'
@@ -377,10 +375,9 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 		);
 		$body = 'THIS IS REQUEST BODY';
 
-		$ret = $handler->callGET('/v3/resource');
+		$ret = $handler->callGET('/v3/resource', NULL);
 		$this->assertEquals($ret['method'], 'GET');
 		$this->assertEquals($ret['path'], '/v3/resource');
-		$this->assertEquals(count($ret['parameters']), 0);
 
 		$ret = $handler->callPOST('/v3/resource', $body);
 		$this->assertEquals($ret['method'], 'POST');
