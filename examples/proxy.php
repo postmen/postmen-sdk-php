@@ -18,7 +18,7 @@ try {
 	// will make it be used only once, this
 	// can also be used to disable it for purpose
 	// of a single call
-	$result = $api->get('labels', array('proxy' => $proxy));
+	$result = $api->get('labels', NULL, NULL, array('proxy' => $proxy));
 } catch (exception $e) {
 	echo "ERROR:\n";
 	echo $e->getCode() . "\n";      // error code

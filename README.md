@@ -145,7 +145,7 @@ Creates API `$resource` object, returns new object payload as `Array`.
 - [manifests_create.php](https://github.com/postmen/postmen-sdk-php/blob/master/examples/manifests_create.php)
 - [cancel_labels_create.php](https://github.com/postmen/postmen-sdk-php/blob/master/examples/cancel_labels_create.php)
 
-#### get($resource, $id = NULL, $query = NULL, $config = array())
+#### get($resource, $id = NULL, $query = array(), $config = array())
 
 Gets API `$resource` objects (list or a single objects).
 
@@ -153,7 +153,7 @@ Gets API `$resource` objects (list or a single objects).
 |-------------|----------|-----------------|-----------|-------------------------------------------------------|
 | `$resource` | YES      | String          | N / A     | Postmen API resourse ('rates', 'labels', 'manifests') |
 | `$id`       | NO       | String          | `NULL`    | Object ID, if not set 'list all' API method is used   |
-| `$query`    | NO       | Array or String | `NULL`    | Optional parameters for 'list all' API method         |
+| `$query`    | NO       | Array or String | `array()`    | Optional parameters for 'list all' API method         |
 | `$config`   | NO       | Array           | `array()` | Override constructor [config](#postmenapi_key-region-config--array) |
 
 **API Docs:**
@@ -178,7 +178,7 @@ Returns SDK error, [PostmenException type](#class-postmenexception) if `$conifg[
 
 Check [Error Handling](#error-handling) for details.
 
-#### callGET($path, $query, $options = array())
+#### callGET($path, $query = array(), $options = array())
 
 Performs HTTP GET request, returns an `Array` object holding API response.
 
@@ -188,9 +188,9 @@ Performs HTTP GET request, returns an `Array` object holding API response.
 | `$query`   | NO       | Array or String | `array()` | HTTP GET request query string                     |
 | `$config`  | NO       | Array           | `array()` | Override constructor [config](#postmenapi_key-region-config--array) |
 
-#### callPOST($path, $body, $options = array())
-#### callPUT($path, $body, $options = array())
-#### callDELETE($path, $body, $options = array())
+#### callPOST($path, $body = array(), $options = array())
+#### callPUT($path, $body = array(), $options = array())
+#### callDELETE($path, $body = array(), $options = array())
 
 Performs HTTP POST/PUT/DELETE request, returns an `Array` object holding API response.
 
@@ -268,10 +268,10 @@ For each API method SDK provides PHP wrapper. Use the table below to find SDK me
       <code>.create('rates', $payload, $opt)</code>
     </a></sub></th>
     <th><sub><a href="https://github.com/postmen/postmen-sdk-php/blob/master/examples/rates_retrieve.php#L16">
-      <code>.get('rates', NULL, $opt)</code>
+      <code>.get('rates', NULL, NULL, $opt)</code>
     </a></sub></th>
     <th><sub><a href="https://github.com/postmen/postmen-sdk-php/blob/master/examples/rates_retrieve.php#L18">
-      <code>.get('rates', $id, $opt)</code>
+      <code>.get('rates', $id, NULL, $opt)</code>
     </a></sub></th>
   </tr>
   <tr>
@@ -280,10 +280,10 @@ For each API method SDK provides PHP wrapper. Use the table below to find SDK me
       <code>.create('labels', $payload, $opt)</code>
     </a></sub></th>
     <th><sub><a href="https://github.com/postmen/postmen-sdk-php/blob/master/examples/labels_retrieve.php#L16">
-      <code>.get('labels', NULL, $opt)</code>
+      <code>.get('labels', NULL, NULL, $opt)</code>
     </a></sub></th>
     <th><sub><a href="https://github.com/postmen/postmen-sdk-php/blob/master/examples/labels_retrieve.php#L18">
-      <code>.get('labels', $id, $opt)</code>
+      <code>.get('labels', $id, NULL, $opt)</code>
     </a></sub></th>
   </tr>
   <tr>
@@ -292,10 +292,10 @@ For each API method SDK provides PHP wrapper. Use the table below to find SDK me
       <code>.create('manifest', $payload, $opt)</code>
     </a></sub></th>
     <th><sub><a href="https://github.com/postmen/postmen-sdk-php/blob/master/examples/manifests_retrieve.php#L16">
-      <code>.get('manifest', NULL, $opt)</code>
+      <code>.get('manifest', NULL, NULL, $opt)</code>
     </a></sub></th>
     <th><sub><a href="https://github.com/postmen/postmen-sdk-php/blob/master/examples/manifests_retrieve.php#L18">
-      <code>.get('manifest', $id, $opt)</code>
+      <code>.get('manifest', $id, NULL, $opt)</code>
     </a></sub></th>
   </tr>
   <tr>
@@ -304,10 +304,10 @@ For each API method SDK provides PHP wrapper. Use the table below to find SDK me
       <code>.create('cancel-labels', $payload, $opt)</code>
     </a></sub></th>
     <th><sub><a href="https://github.com/postmen/postmen-sdk-php/blob/master/examples/cancel_labels_retrieve.php#L16">
-      <code>.get('cancel-labels', NULL, $opt)</code>
+      <code>.get('cancel-labels', NULL, NULL, $opt)</code>
     </a></sub></th>
     <th><sub><a href="https://github.com/postmen/postmen-sdk-php/blob/master/examples/cancel_labels_retrieve.php#L18">
-      <code>.get('cancel-labels', $id, $opt)</code>
+      <code>.get('cancel-labels', $id, NULL, $opt)</code>
     </a></sub></th>
   </tr>
 </table>

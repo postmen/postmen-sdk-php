@@ -34,7 +34,7 @@ class Postmen
 		if (!isset($api_key)) {
 			throw new PostmenException('API key is required', 999, false);
 		}
-		$this->_version = "0.8.0";
+		$this->_version = "0.9.0";
 		$this->_api_key = $api_key;
 		$this->_config = array();
 		$this->_config['endpoint'] = "https://$region-api.postmen.com";
@@ -54,12 +54,14 @@ class Postmen
 
 	public function buildCurlParams($method, $path, $config = array()) {
 		$parameters = $this->mergeArray($config);
-		$body = '';
-		if (isset($parameters['body'])) {
-			$body = $parameters['body'];
-		}
-		if (!is_string($body)) {
-			$body = json_encode($body);
+		if (!isset($parameters['body'])) {
+			$parameters['body'] = '';
+		} else if (!is_string($parameters['body'])) {
+			if (count($parameters['body']) == 0) {
+				$parameters['body'] = '';
+			} else {
+				$parameters['body'] = json_encode($parameters['body']);
+			}
 		}
 		$headers = array(
 			"content-type: application/json",
@@ -91,7 +93,7 @@ class Postmen
 			$curl_params[CURLOPT_FOLLOWLOCATION] = true;
 		}
 		if ($method != 'GET') {
-			$curl_params[CURLOPT_POSTFIELDS] = $body;
+			$curl_params[CURLOPT_POSTFIELDS] = $parameters['body'];
 		}
 		return $curl_params;
 	}
@@ -242,10 +244,19 @@ class Postmen
 	public function generateURL($url, $path, $method, $query) {
 		if ($method == 'GET') {
 			if (is_string($query)) {
-				return $url . $path . $query;
+				if (strlen($query) > 0) {
+					if ($query[0] == '?') {
+						return $url . $path . $query;
+					} else {
+						return $url . $path . '?' . $query;
+					}
+				}
 			}
 			if (isset($query)) {
-				return $url . $path . '?' . http_build_query($query);
+				$qr = http_build_query($query);
+				if (strlen($qr) > 0) {
+					return $url . $path . '?' . $qr;
+				}
 			}	
 		}
 		return $url . $path;
@@ -263,31 +274,31 @@ class Postmen
 		}
 	}
 
-	public function callGET($path, $query, $config = array()) {
+	public function callGET($path, $query = array(), $config = array()) {
 		$config['query'] = $query;
 		return $this->call('GET', $path, $config);
 	}
 
-	public function callPOST($path, $body, $config = array()) {
+	public function callPOST($path, $body = array(), $config = array()) {
 		$config['body'] = $body;
 		return $this->call('POST', $path, $config);
 	}
 
-	public function callPUT($path, $body, $config = array()) {
+	public function callPUT($path, $body = array(), $config = array()) {
 		$config['body'] = $body;
 		return $this->call('PUT', $path, $config);
 	}
 
-	public function callDELETE($path, $body, $config = array()) {
+	public function callDELETE($path, $body = array(), $config = array()) {
 		$config['body'] = $body;
 		return $this->call('DELETE', $path, $config);
 	}
 
-	public function get($resource, $id = NULL, $config = array()) {
+	public function get($resource, $id = NULL, $query = array(), $config = array()) {
 		if ($id !== NULL) {
-			return $this->callGET("/v3/$resource/$id", NULL, $config);
+			return $this->callGET("/v3/$resource/$id", $query, $config);
 		} else {
-			return $this->callGET("/v3/$resource", NULL, $config);
+			return $this->callGET("/v3/$resource", $query, $config);
 		}
 	}
 

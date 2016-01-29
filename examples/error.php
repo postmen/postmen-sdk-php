@@ -26,7 +26,7 @@ try {
 
 echo "using safe mode\n";
 $api = new Postmen('THIS IS NOT A VALID API KEY', $region);
-$result = $api->get('labels', NULL, array('safe' => true));
+$result = $api->get('labels', NULL, NULL, array('safe' => true));
 if (!$result) {
 	$e = $api->getError();
 	echo "ERROR:\n";
