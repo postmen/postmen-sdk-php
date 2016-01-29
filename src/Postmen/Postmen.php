@@ -34,7 +34,7 @@ class Postmen
 		if (!isset($api_key)) {
 			throw new PostmenException('API key is required', 999, false);
 		}
-		$this->_version = "0.9.0";
+		$this->_version = "1.0.0";
 		$this->_api_key = $api_key;
 		$this->_config = array();
 		$this->_config['endpoint'] = "https://$region-api.postmen.com";
