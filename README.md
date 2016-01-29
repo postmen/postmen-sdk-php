@@ -247,7 +247,7 @@ All examples avalible listed in the table below.
 
 Download the source code, go to `examples` directory.
 
-Put your API key and region to [credentials.php](https://github.com/postmen/postmen-sdk-php/blob/master/examples/rates_calculate.php)
+Put your API key and region to [credentials.php](https://github.com/postmen/postmen-sdk-php/blob/master/examples/credentials.php)
 
 Check the file you want to run before run. Some require you to set additional variables.
 
