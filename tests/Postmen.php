@@ -83,7 +83,7 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 		$mock_curl_length = new PHPUnit_Extensions_MockFunction('curl_getinfo', $handler);
 		$mock_curl_length->expects($this->atLeastOnce() )->will($this->returnValue($this->headers_length));
 
-		$result = $handler->get('labels', '', array('safe' => true));
+		$result = $handler->get('labels', '', NULL, array('safe' => true));
 		$exception = $handler->getError();
 
 		$this->assertNull($result);
@@ -393,7 +393,7 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 		// test if endpoint behaviour is as documented
 		$ret = $handler->get('resource');
 		$this->assertEquals($ret['curl'][CURLOPT_URL], 'https://region-api.postmen.com/v3/resource');
-		$ret = $handler->get('resource', NULL, array('endpoint' => 'https://custom-endpoint.com'));
+		$ret = $handler->get('resource', NULL, NULL, array('endpoint' => 'https://custom-endpoint.com'));
 		$this->assertEquals($ret['curl'][CURLOPT_URL], 'https://custom-endpoint.com/v3/resource');
 	}
 
@@ -451,6 +451,30 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 		} catch(Exception $e) {
 			$this->fail('CURLOPT_HEADER must be set to true as header is required for rate limiting');
 		}
+
+		$parameters['body'] = array();
+		$post = $handler->buildCurlParams('POST', $path, $parameters);
+		try {
+			$this->assertEquals($post[CURLOPT_POSTFIELDS], '');
+		} catch(Exception $e) {
+			$this->fail('POST request method, if empty array passed as body, body string in request must be empty');
+		}
+
+		$parameters['body'] = array('key' => 'value');
+		$post = $handler->buildCurlParams('POST', $path, $parameters);
+		try {
+			$this->assertEquals($post[CURLOPT_POSTFIELDS], '{"key":"value"}');
+		} catch(Exception $e) {
+			$this->fail('POST request method, if associative array passed as body, body must containt is serialized as JSON object');
+		}
+
+		$post = $handler->buildCurlParams('POST', $path, array());
+		try {
+			$this->assertEquals($post[CURLOPT_POSTFIELDS], '');
+		} catch(Exception $e) {
+			$this->fail('POST request method, if body field of config array is undefined, body string in request must be empty');
+		}
+
 	}
 
 	/**
@@ -509,7 +533,7 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 			)
 		);
 
-		$ret = $handler->get('resource', NULL, $new);
+		$ret = $handler->get('resource', NULL, NULL, $new);
 		$params = $ret['curl'];
 		try {
 			$this->assertEquals($params[CURLOPT_PROXY], $new_proxy_host);
@@ -597,6 +621,8 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 		$expected = 'http://example.com/path';
 		$this->assertEquals($handler->generateURL($base, $path, 'POST', $query), $expected);
 		$this->assertEquals($handler->generateURL($base, $path, 'GET', '?a=alpha&b=beta'), 'http://example.com/path?a=alpha&b=beta');
+		$this->assertEquals($handler->generateURL($base, $path, 'GET', 'a=alpha&b=beta'), 'http://example.com/path?a=alpha&b=beta');
+		$this->assertEquals($handler->generateURL($base, $path, 'GET', array()), 'http://example.com/path');
 
 	}
 
