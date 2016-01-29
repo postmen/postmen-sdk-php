@@ -589,6 +589,45 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 		}
 	}
 
+	/** test if array will be merged correctly
+	 */
+	public function testMergeArray() {
+		$config = array(
+			'retry' => false,
+			'rate' => false,
+			'array' => true,
+			'raw' => true,
+			'safe' => true
+		);
+		$new_config = array(
+			'retry' => true,
+			'rate' => true,
+			'array' => false,
+			'raw' => false,
+			'safe' => false
+		);
+
+		// test if will set the empty keys
+		$handler = new Postmen('', 'region');
+		$merged = $handler->mergeArray($config);
+
+		$this->assertEquals($merged['retry'], false);
+		$this->assertEquals($merged['rate'], false);
+		$this->assertEquals($merged['array'], true);
+		$this->assertEquals($merged['raw'], true);
+		$this->assertEquals($merged['safe'], true);
+
+		// see if will override existing keys
+		$handler = new Postmen('', 'region', $config);
+		$merged = $handler->mergeArray($new_config);
+
+		$this->assertEquals($merged['retry'], true);
+		$this->assertEquals($merged['rate'], true);
+		$this->assertEquals($merged['array'], false);
+		$this->assertEquals($merged['raw'], false);
+		$this->assertEquals($merged['safe'], false);
+	}
+
 	/** test array optional parameter
 	 */
 	public function testReturnAsObject() {

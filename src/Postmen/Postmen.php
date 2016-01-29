@@ -17,6 +17,8 @@ class Postmen
 	private $_url;
 	private $_version;
 	private $_error;
+
+	private $_config;
 	private $_proxy;
 	private $_array;
 
@@ -37,9 +39,7 @@ class Postmen
 		}
 		$this->_version = "0.5.0";
 		$this->_api_key = $api_key;
-		if (isset($config['proxy'])) {
-			$this->_proxy = $config['proxy'];
-		}
+		$this->_config = array();
 		if (isset($config['endpoint'])) {
 			$this->_url = $config['endpoint'];
 		} else if (!isset($region)) {
@@ -47,18 +47,12 @@ class Postmen
 		} else {
 			$this->_url = "https://$region-api.postmen.com";
 		}
-		$this->_retry = true;
-		if (isset($config['retry'])) {
-			$this->_retry = $config['retry'];
-		}
-		$this->_rate = true;
-		if (isset($config['rate'])) {
-			$this->_rate = $config['rate'];
-		}
-		$this->_array = false;
-		if (isset($config['array'])) {
-			$this->_array = $config['array'];
-		}
+		$this->_config['retry'] = true;
+		$this->_config['rate'] = true;
+		$this->_config['array'] = false;
+		$this->_config['raw'] = false;
+		$this->_config['safe'] = false;
+		$this->_config = $this->mergeArray($config);
 		// set attributes concerning ratelimiting and auto-retry
 		$this->_delay = 1;
 		$this->_retries = 0;
@@ -66,7 +60,8 @@ class Postmen
 		$this->_calls_left = NULL;
 	}
 
-	public function buildCurlParams($method, $path, $parameters = array()) {
+	public function buildCurlParams($method, $path, $config = array()) {
+		$parameters = $this->mergeArray($config);
 		$body = '';
 		if (isset($parameters['body'])) {
 			$body = $parameters['body'];
@@ -112,28 +107,22 @@ class Postmen
 		return $curl_params;
 	}
 
-	public function call($method, $path, $parameters = array()) {
+	public function call($method, $path, $config = array()) {
 		$this->_retries += 1;
-		$retry = $this->_retry;
-		if (!isset($retry)) {
-			if (isset($parameters['retry'])) {
-				if($parameters['retry']) {
-					$retry = true;
-				}
-			} else {
-				$retry = false;
-			}
+		$parameters = $this->mergeArray($config);
+		if (!isset($method)) {
+			$method = $parameters['method'];
+		} else {
+			$parameters['method'] = $method;
 		}
-		$raw = false;
-		if(isset($parameters['raw'])) {
-			if($parameters['raw']) {
-				$raw = true;
-			}
+		if (!isset($path)) {
+			$path = $parameters['path'];
+		} else {
+			$parameters['path'] = $path;
 		}
-		$safe = false;
-		if (isset($parameters['safe'])) {
-			$safe = $parameters['safe'];
-		}
+		$retry = $parameters['retry'];
+		$raw = $parameters['raw'];
+		$safe = $parameters['safe'];
 		$curl = curl_init();
 		$curl_params = $this->buildCurlParams($method, $path, $parameters);
 		curl_setopt_array($curl, $curl_params);
@@ -164,15 +153,8 @@ class Postmen
 		$date = new \DateTime($headers_date, new \DateTimeZone('GMT'));
 		$now = (int) $date->format('U');
 		// process the response
-		$call = array(
-			'retry' => $retry,
-			'method' => $method,
-			'path' => $path,
-			'parameters' => $parameters,
-			// options for automatic rate limiting
-			'now' => $now,
-			'reset' => $reset
-		);
+		$parameters['now'] = $now;
+		$parameters['reset'] = $reset;
 		if ($err) {
 			$error = new PostmenException("failed to request: $err" , 100, true, array());
 			if ($safe) {
@@ -182,29 +164,28 @@ class Postmen
 				throw $error;
 			}
 		}
-		return $this->processCurlResponse($response_body, $safe, $raw, $call);
+		return $this->processCurlResponse($response_body, $parameters);
 	}
 
-	public function processCurlResponse($response, $safe, $raw, $call) {
+	public function processCurlResponse($response, $parameters) {
 		$parsed = json_decode($response);
 		if ($parsed) {
-			if($raw) {
+			if($parameters['raw']) {
 				return $response;
 			}
-			return $this->handle($parsed, $safe, $call);
+			return $this->handle($parsed, $parameters);
 		} else {
 			$err_message = 'Something went wrong on Postmen\'s end';
 			$err_code = 500;
 			$err_retryable = false;
 			$err_details = array();
-			return $this->handleError($err_message, $err_code, $err_retryable, $err_details, $safe);
+			return $this->handleError($err_message, $err_code, $err_retryable, $err_details, $parameters);
 		}
-
 	}
 
-	public function handleError($err_message, $err_code, $err_retryable, $err_details, $safe) {
+	public function handleError($err_message, $err_code, $err_retryable, $err_details, $parameters) {
 		$error = new PostmenException($err_message, $err_code, $err_retryable, $err_details);
-		if ($safe) {
+		if ($parameters['safe']) {
 			$this->_error = $error;
 		} else {
 			throw $error;
@@ -212,7 +193,7 @@ class Postmen
 		return NULL;
 	}
 
-	public function handle($parsed, $safe, $call) {
+	public function handle($parsed, $parameters) {
 		if ($parsed->meta->code != 200) {
 			$err_code = 0; 
 			$err_message = 'Postmen server side error occured';
@@ -231,23 +212,23 @@ class Postmen
 				$err_retryable = $parsed->meta->retryable;
 			}
 			// apply rate limiting if error 429 occurs
-			if ($this->_rate && $err_code === 429) {
-				$delay = $call['reset'] - $call['now'];
+			if ($parameters['rate'] && $err_code === 429) {
+				$delay = $parameters['reset'] - $parameters['now'];
 				if ($delay > 0) {
 					sleep($delay);
 				}
-				return $this->call($call['method'], $call['path'], $call['parameters']);
+				return $this->call(NULL, NULL, $parameters);
 			}
 			// apply automatic retry if error is retry-able
-			if ($call['retry'] && $err_retryable) {
-				$retried = $this->handleRetry($call);
+			if ($parameters['retry'] && $err_retryable) {
+				$retried = $this->handleRetry($parameters);
 				if ($retried !== NULL) {
 					return $retried;
 				}
 			}
-			return $this->handleError($err_message, $err_code, $err_retryable, $err_details, $safe);
+			return $this->handleError($err_message, $err_code, $err_retryable, $err_details, $parameters);
 		} else {
-			if ($this->_array) {
+			if ($parameters['array']) {
 				$parsed_array = json_decode(json_encode($parsed), true);
 				return $parsed_array['data'];
 			} else {
@@ -256,6 +237,19 @@ class Postmen
 		}
 	}
 
+	/** takes an associative array $config as argument
+	 *  returns merged array with local $this->_config
+	 *  values from $config are prioritary
+	 */
+	public function mergeArray($config) {
+		$parameters = $this->_config;
+		foreach ($config as $key => $value) {
+			$parameters[$key] = $value;
+		}
+		return $parameters;
+	}
+
+	// TODO allow query as a string
 	public function generateURL($url, $path, $method, $query) {
 		if ($method == 'GET') {
 			if (isset($query)) {
@@ -265,11 +259,11 @@ class Postmen
 		return $url . $path;
 	}
 
-	public function handleRetry($call) {
+	public function handleRetry($parameters) {
 		if ($this->_retries < $this->_max_retries) {
 			sleep($this->_delay);
 			$this->_delay = $this->_delay * 2;
-			return $this->call($call['method'], $call['path'], $call['parameters']);
+			return $this->call(NULL, NULL, $parameters);
 		} else {
 			$this->_retries = 0;
 			$this->_delay = 1;
@@ -277,48 +271,48 @@ class Postmen
 		}
 	}
 
-	public function callGET($path, $parameters = array()) {
-		return $this->call('GET', $path, $parameters);
+	public function callGET($path, $config = array()) {
+		return $this->call('GET', $path, $config);
 	}
 
-	public function callPOST($path, $body, $parameters = array()) {
-		$parameters['body'] = $body;
-		return $this->call('POST', $path, $parameters);
+	public function callPOST($path, $body, $config = array()) {
+		$config['body'] = $body;
+		return $this->call('POST', $path, $config);
 	}
 
-	public function callPUT($path, $body, $parameters = array()) {
-		$parameters['body'] = $body;
-		return $this->call('PUT', $path, $parameters);
+	public function callPUT($path, $body, $config = array()) {
+		$config['body'] = $body;
+		return $this->call('PUT', $path, $config);
 	}
 
-	public function callDELETE($path, $body, $parameters = array()) {
-		$parameters['body'] = $body;
-		return $this->call('DELETE', $path, $parameters);
+	public function callDELETE($path, $body, $config = array()) {
+		$config['body'] = $body;
+		return $this->call('DELETE', $path, $config);
 	}
 
-	public function get($resource, $id = NULL, $parameters = array()) {
+	public function get($resource, $id = NULL, $config = array()) {
 		if ($id !== NULL) {
-			return $this->callGET("/v3/$resource/$id", $parameters);
+			return $this->callGET("/v3/$resource/$id", $config);
 		} else {
-			return $this->callGET("/v3/$resource", $parameters);
+			return $this->callGET("/v3/$resource", $config);
 		}
 	}
 
-	public function create($resource, $payload, $parameters = array()) {
+	public function create($resource, $payload, $config = array()) {
 		if (!is_string($payload)) {
 			$payload['async'] = false;
 		}
-		return $this->callPOST("/v3/$resource", $payload, $parameters);
+		return $this->callPOST("/v3/$resource", $payload, $config);
 	}
 
-	public function cancelLabel($id, $parameters = array()) {
+	public function cancelLabel($id, $config = array()) {
 		$payload = array (
 			'label' => array (
 				'id' => $id
 			),
 			'async' => false
 		);
-		return $this->callPOST("/v3/cancel-labels", $payload, $parameters);
+		return $this->callPOST("/v3/cancel-labels", $payload, $config);
 	}
 
 	public function getError() {
