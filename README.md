@@ -174,7 +174,7 @@ Gets API `$resource` objects (list or a single objects).
 
 #### getError()
 
-Returns SDK error, (PostmenException type)[#class-postmenexception] if `$conifg['safe'] = TRUE;` was set.
+Returns SDK error, [PostmenException type](#class-postmenexception) if `$conifg['safe'] = TRUE;` was set.
 
 Check [Error Handling](#error-handling) for details.
 
