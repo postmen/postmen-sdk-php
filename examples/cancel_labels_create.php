@@ -19,7 +19,7 @@ $payload = array (
 
 try {
 	$api = new Postmen($key, $region);
-	$result = $api->create('cancel-labels', $label);
+	$result = $api->create('cancel-labels', $payload);
 	echo "RESULT:\n";
 	print_r($result);
 } catch (exception $e) {
