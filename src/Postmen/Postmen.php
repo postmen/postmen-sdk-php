@@ -14,13 +14,10 @@ use Postmen\PostmenException;
 class Postmen
 {
 	private $_api_key;
-	private $_url;
 	private $_version;
 	private $_error;
 
 	private $_config;
-	private $_proxy;
-	private $_array;
 
 	// auto-retry if retryable attributes
 	private $_retry;
@@ -40,18 +37,13 @@ class Postmen
 		$this->_version = "0.5.0";
 		$this->_api_key = $api_key;
 		$this->_config = array();
-		if (isset($config['endpoint'])) {
-			$this->_url = $config['endpoint'];
-		} else if (!isset($region)) {
-			throw new PostmenException('missing required field', 999, false);
-		} else {
-			$this->_url = "https://$region-api.postmen.com";
-		}
+		$this->_config['endpoint'] = "https://$region-api.postmen.com";
 		$this->_config['retry'] = true;
 		$this->_config['rate'] = true;
 		$this->_config['array'] = false;
 		$this->_config['raw'] = false;
 		$this->_config['safe'] = false;
+		$this->_config['proxy'] = array();
 		$this->_config = $this->mergeArray($config);
 		// set attributes concerning ratelimiting and auto-retry
 		$this->_delay = 1;
@@ -78,7 +70,7 @@ class Postmen
 		if (isset($parameters['query'])) {
 			$query = $parameters['query'];
 		}
-		$url = $this->generateURL($this->_url, $path, $method, $query);
+		$url = $this->generateURL($parameters['endpoint'], $path, $method, $query);
 		$curl_params = array(
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_URL => $url,
@@ -86,11 +78,8 @@ class Postmen
 			CURLOPT_HTTPHEADER => $headers,
 			CURLOPT_HEADER => true	
 		);
-		$proxy = $this->_proxy;
-		if (isset($parameters['proxy'])) {
-			$proxy = $parameters['proxy'];
-		}
-		if (isset($proxy)) {
+		$proxy = $parameters['proxy'];
+		if (count($proxy) > 0) {
 			$curl_params[CURLOPT_PROXY] = $proxy['host'];
 			if (isset($proxy['username'])) {
 				$auth = $proxy['username'] . ':' . $proxy['password'];
