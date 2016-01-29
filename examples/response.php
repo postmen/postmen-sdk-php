@@ -6,7 +6,7 @@ use Postmen\Postmen;
 try {
 	$api = new Postmen($key, $region);
 	// get a raw json string
-	$output_json = $api->get('labels', array('raw' => true));
+	$output_json = $api->get('labels', NULL, NULL, array('raw' => true));
 	// get a std object
 	$output_object = $api->get('labels');
 	// to get an array it requires to initiate
