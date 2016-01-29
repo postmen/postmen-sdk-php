@@ -402,6 +402,12 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 		$this->assertEquals(count($ret['parameters']), 1);
 		$this->assertEquals(isset($ret['parameters']['body']), true);
 		$this->assertEquals($ret['parameters']['body'], $body);
+
+		// test if endpoint behaviour is as documented
+		$ret = $handler->get('resource');
+		$this->assertEquals($ret['curl'][CURLOPT_URL], 'https://region-api.postmen.com/v3/resource');
+		$ret = $handler->get('resource', NULL, array('endpoint' => 'https://custom-endpoint.com'));
+		$this->assertEquals($ret['curl'][CURLOPT_URL], 'https://custom-endpoint.com/v3/resource');
 	}
 
 
@@ -464,7 +470,6 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 	 *  test proxy parameters
 	 */ 
 	public function testCurlParamsProxy() {
-		$handler = new Postmen('', '');
 		$method = 'GET';
 		$path = '/path';
 		$proxy_host = 'proxyserver.com';
@@ -479,7 +484,9 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 				'password' => $proxy_pass
 			)
 		);
-		$params = $handler->buildCurlParams($method, $path, $parameters);
+		$handler = new FakePostmen('', '', $parameters);
+		$ret = $handler->get('resource');
+		$params = $ret['curl'];
 		try {
 			$this->assertEquals($params[CURLOPT_PROXY], $proxy_host);
 		} catch(Exception $e) {
@@ -499,6 +506,43 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 			$this->assertEquals($params[CURLOPT_FOLLOWLOCATION], true);
 		} catch(Exception $e) {
 			$this->fail('CURLOPT_FOLLOWLOCATION must be set to true as it is required for proxy to work correctly');
+		}
+
+		// check if will override previous proxy
+		$new_proxy_host = 'another-proxyserver.com';
+		$new_proxy_user = 'another_person';
+		$new_proxy_pass = 'moretopsecret';
+		$new_proxy_port = 99999;
+		$new = array(
+			'proxy' => array(
+				'host' => $new_proxy_host,
+				'port' => $new_proxy_port,
+				'username' => $new_proxy_user,
+				'password' => $new_proxy_pass
+			)
+		);
+
+		$ret = $handler->get('resource', NULL, $new);
+		$params = $ret['curl'];
+		try {
+			$this->assertEquals($params[CURLOPT_PROXY], $new_proxy_host);
+		} catch(Exception $e) {
+			$this->fail('CURLOPT_PROXY must contain proxy server hostname, failed to override');
+		}
+		try {
+			$this->assertEquals($params[CURLOPT_PROXYUSERPWD], "$new_proxy_user:$new_proxy_pass");
+		} catch(Exception $e) {
+			$this->fail('CURLOPT_PROXYUSERPWD must contain authentication credentials in form user:password, failed to override');
+		}
+		try {
+			$this->assertEquals($params[CURLOPT_PROXYPORT], $new_proxy_port);
+		} catch(Exception $e) {
+			$this->fail('CURLOPT_PROXYPORT must contain the port number, failed to override');
+		}
+		try {
+			$this->assertEquals($params[CURLOPT_FOLLOWLOCATION], true);
+		} catch(Exception $e) {
+			$this->fail('CURLOPT_FOLLOWLOCATION must be set to true as it is required for proxy to work correctly, failed to override');
 		}
 	}
 
@@ -565,6 +609,8 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 		$this->assertEquals($handler->generateURL($base, $path, 'GET', $query), $expected);
 		$expected = 'http://example.com/path';
 		$this->assertEquals($handler->generateURL($base, $path, 'POST', $query), $expected);
+		$this->assertEquals($handler->generateURL($base, $path, 'GET', '?a=alpha&b=beta'), 'http://example.com/path?a=alpha&b=beta');
+
 	}
 
 	/** test if after passing PHP array object as request body
@@ -587,6 +633,45 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 		} catch(Exception $e) {
 			$this->fail('CURLOPT_POSTFIELDS must contain JSON object of input PHP array');
 		}
+	}
+
+	/** test if array will be merged correctly
+	 */
+	public function testMergeArray() {
+		$config = array(
+			'retry' => false,
+			'rate' => false,
+			'array' => true,
+			'raw' => true,
+			'safe' => true
+		);
+		$new_config = array(
+			'retry' => true,
+			'rate' => true,
+			'array' => false,
+			'raw' => false,
+			'safe' => false
+		);
+
+		// test if will set the empty keys
+		$handler = new Postmen('', 'region');
+		$merged = $handler->mergeArray($config);
+
+		$this->assertEquals($merged['retry'], false);
+		$this->assertEquals($merged['rate'], false);
+		$this->assertEquals($merged['array'], true);
+		$this->assertEquals($merged['raw'], true);
+		$this->assertEquals($merged['safe'], true);
+
+		// see if will override existing keys
+		$handler = new Postmen('', 'region', $config);
+		$merged = $handler->mergeArray($new_config);
+
+		$this->assertEquals($merged['retry'], true);
+		$this->assertEquals($merged['rate'], true);
+		$this->assertEquals($merged['array'], false);
+		$this->assertEquals($merged['raw'], false);
+		$this->assertEquals($merged['safe'], false);
 	}
 
 	/** test array optional parameter
