@@ -300,13 +300,13 @@ For each API method SDK provides PHP wrapper. Use the table below to find SDK me
   </tr>
   <tr>
     <th>cancel-labels</th>
-    <th><sub><a href="https://github.com/postmen/postmen-sdk-php/blob/master/examples/cancel_label_create.php">
+    <th><sub><a href="https://github.com/postmen/postmen-sdk-php/blob/master/examples/cancel_labels_create.php">
       <code>.create('cancel-labels', $payload, $opt)</code>
     </a></sub></th>
-    <th><sub><a href="https://github.com/postmen/postmen-sdk-php/blob/master/examples/cancel_label_retrieve.php#L16">
+    <th><sub><a href="https://github.com/postmen/postmen-sdk-php/blob/master/examples/cancel_labels_retrieve.php#L16">
       <code>.get('cancel-labels', NULL, $opt)</code>
     </a></sub></th>
-    <th><sub><a href="https://github.com/postmen/postmen-sdk-php/blob/master/examples/cancel_label_retrieve.php#L18">
+    <th><sub><a href="https://github.com/postmen/postmen-sdk-php/blob/master/examples/cancel_labels_retrieve.php#L18">
       <code>.get('cancel-labels', $id, $opt)</code>
     </a></sub></th>
   </tr>
