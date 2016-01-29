@@ -34,7 +34,7 @@ class Postmen
 		if (!isset($api_key)) {
 			throw new PostmenException('API key is required', 999, false);
 		}
-		$this->_version = "0.6.0";
+		$this->_version = "0.7.0";
 		$this->_api_key = $api_key;
 		$this->_config = array();
 		$this->_config['endpoint'] = "https://$region-api.postmen.com";
@@ -263,7 +263,8 @@ class Postmen
 		}
 	}
 
-	public function callGET($path, $config = array()) {
+	public function callGET($path, $query, $config = array()) {
+		$config['query'] = $query;
 		return $this->call('GET', $path, $config);
 	}
 
@@ -284,9 +285,9 @@ class Postmen
 
 	public function get($resource, $id = NULL, $config = array()) {
 		if ($id !== NULL) {
-			return $this->callGET("/v3/$resource/$id", $config);
+			return $this->callGET("/v3/$resource/$id", NULL, $config);
 		} else {
-			return $this->callGET("/v3/$resource", $config);
+			return $this->callGET("/v3/$resource", NULL, $config);
 		}
 	}
 
