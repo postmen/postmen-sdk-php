@@ -34,7 +34,7 @@ class Postmen
 		if (!isset($api_key)) {
 			throw new PostmenException('API key is required', 999, false);
 		}
-		$this->_version = "0.7.0";
+		$this->_version = "0.8.0";
 		$this->_api_key = $api_key;
 		$this->_config = array();
 		$this->_config['endpoint'] = "https://$region-api.postmen.com";
@@ -296,16 +296,6 @@ class Postmen
 			$payload['async'] = false;
 		}
 		return $this->callPOST("/v3/$resource", $payload, $config);
-	}
-
-	public function cancelLabel($id, $config = array()) {
-		$payload = array (
-			'label' => array (
-				'id' => $id
-			),
-			'async' => false
-		);
-		return $this->callPOST("/v3/cancel-labels", $payload, $config);
 	}
 
 	public function getError() {

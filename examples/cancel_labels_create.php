@@ -10,9 +10,16 @@ if(!isset($label)) {
 	echo "\$label is not set, modify file cancel_label.php\n";
 }
 
+$payload = array (
+	'label' => array (
+		'id' => $label
+	)
+);
+
+
 try {
 	$api = new Postmen($key, $region);
-	$result = $api->cancelLabel($label);
+	$result = $api->create('cancel-labels', $label);
 	echo "RESULT:\n";
 	print_r($result);
 } catch (exception $e) {
