@@ -609,6 +609,8 @@ class PostmenTest extends PHPUnit_Framework_TestCase {
 		$this->assertEquals($handler->generateURL($base, $path, 'GET', $query), $expected);
 		$expected = 'http://example.com/path';
 		$this->assertEquals($handler->generateURL($base, $path, 'POST', $query), $expected);
+		$this->assertEquals($handler->generateURL($base, $path, 'GET', '?a=alpha&b=beta'), 'http://example.com/path?a=alpha&b=beta');
+
 	}
 
 	/** test if after passing PHP array object as request body

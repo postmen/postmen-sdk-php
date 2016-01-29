@@ -34,7 +34,7 @@ class Postmen
 		if (!isset($api_key)) {
 			throw new PostmenException('API key is required', 999, false);
 		}
-		$this->_version = "0.5.0";
+		$this->_version = "0.6.0";
 		$this->_api_key = $api_key;
 		$this->_config = array();
 		$this->_config['endpoint'] = "https://$region-api.postmen.com";
@@ -238,9 +238,12 @@ class Postmen
 		return $parameters;
 	}
 
-	// TODO allow query as a string
+	// allow query as a string
 	public function generateURL($url, $path, $method, $query) {
 		if ($method == 'GET') {
+			if (is_string($query)) {
+				return $url . $path . $query;
+			}
 			if (isset($query)) {
 				return $url . $path . '?' . http_build_query($query);
 			}	
