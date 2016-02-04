@@ -119,7 +119,7 @@ In order to get API key and choose a region refer to the [documentation](https:/
 | `$config['raw']`               | —                                      | Boolean | `FALSE`   | To return API response as a raw string            |
 | `$config['proxy']`             | —                                      | Array   | `array()` | Proxy credentials                                 |
 | `$config['proxy']['host']`     | YES if `$config['proxy']` is not empty | String  | N / A     | Proxy host                                        |
-| `$config['proxy']['port']`     | NO                                     | Integer | N / A     | Proxy post                                        |
+| `$config['proxy']['port']`     | NO                                     | Integer | N / A     | Proxy port                                        |
 | `$config['proxy']['username']` | NO                                     | String  | N / A     | Proxy user name                                   |
 | `$config['proxy']['password']` | NO                                     | String  | N / A     | Proxy password                                    |
 
