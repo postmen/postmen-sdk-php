@@ -117,6 +117,7 @@ In order to get API key and choose a region refer to the [documentation](https:/
 | `$config['rate']`              | —                                      | Boolean | `TRUE`    | Wait before API call if rate limit exceeded or retry on 429 error |
 | `$config['safe']`              | —                                      | Boolean | `FALSE`   | Suppress exceptions on errors, NULL would be returned instead, check [Error Handling](#error-handling) |
 | `$config['raw']`               | —                                      | Boolean | `FALSE`   | To return API response as a raw string            |
+| `$config['array']`             | —                                      | Boolean | `FALSE`   | To return API response as an associative array    |
 | `$config['proxy']`             | —                                      | Array   | `array()` | Proxy credentials                                 |
 | `$config['proxy']['host']`     | YES if `$config['proxy']` is not empty | String  | N / A     | Proxy host                                        |
 | `$config['proxy']['port']`     | NO                                     | Integer | N / A     | Proxy post                                        |
