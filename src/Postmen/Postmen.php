@@ -78,7 +78,7 @@ class Postmen
 			CURLOPT_URL => $url,
 			CURLOPT_CUSTOMREQUEST => $method,
 			CURLOPT_HTTPHEADER => $headers,
-			CURLOPT_HEADER => true	
+			CURLOPT_HEADER => true
 		);
 		$proxy = $parameters['proxy'];
 		if (count($proxy) > 0) {
@@ -128,16 +128,16 @@ class Postmen
 		$response_headers_array = array();
 		foreach (explode("\r\n", $response_headers) as $line) {
 			list($key, $value) = array_pad(explode(': ', $line, 2), 2, null);
-			$response_headers_array[$key] = $value;
+			$response_headers_array[strtolower($key)] = $value;
 		}
-		$headers_date = $response_headers_array['Date'];
+		$headers_date = $response_headers_array['date'];
 		$calls_left = 0;
-		if (isset($response_headers_array['X-RateLimit-Remaining'])) {
-			$calls_left = (int)$response_headers_array['X-RateLimit-Remaining'];
+		if (isset($response_headers_array['x-ratelimit-remaining'])) {
+			$calls_left = (int)$response_headers_array['x-ratelimit-remaining'];
 		}
 		$reset = 0;
-		if (isset($response_headers_array['X-RateLimit-Reset'])) {
-			$reset = (int)(((int)$response_headers_array['X-RateLimit-Reset']) / 1000);
+		if (isset($response_headers_array['x-ratelimit-reset'])) {
+			$reset = (int)(((int)$response_headers_array['x-ratelimit-reset']) / 1000);
 		}
 		// convert headers date to timestamp, please refer to
 		// https://tools.ietf.org/html/rfc7231#section-7.1.1.1
@@ -186,7 +186,7 @@ class Postmen
 
 	public function handle($parsed, $parameters) {
 		if ($parsed->meta->code != 200) {
-			$err_code = 0; 
+			$err_code = 0;
 			$err_message = 'Postmen server side error occured';
 			$err_details = array();
 			$err_retryable = false;
@@ -257,7 +257,7 @@ class Postmen
 				if (strlen($qr) > 0) {
 					return $url . $path . '?' . $qr;
 				}
-			}	
+			}
 		}
 		return $url . $path;
 	}
