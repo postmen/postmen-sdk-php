@@ -174,8 +174,8 @@ class Postmen
 		}
 	}
 
-	public function handleError($err_message, $err_code, $err_retryable, $err_details, $parameters) {
-		$error = new PostmenException($err_message, $err_code, $err_retryable, $err_details);
+	public function handleError($err_message, $err_code, $err_retryable, $err_details, $parameters, $response_data = null) {
+		$error = new PostmenException($err_message, $err_code, $err_retryable, $err_details, null, $response_data);
 		if ($parameters['safe']) {
 			$this->_error = $error;
 		} else {
@@ -185,6 +185,11 @@ class Postmen
 	}
 
 	public function handle($parsed, $parameters) {
+		$response_data = $parsed->data;
+		if ($parameters['array']) {
+			$parsed_array = json_decode(json_encode($parsed), true);
+			$response_data = $parsed_array['data'];
+		}
 		if ($parsed->meta->code != 200) {
 			$err_code = 0; 
 			$err_message = 'Postmen server side error occured';
@@ -217,15 +222,9 @@ class Postmen
 					return $retried;
 				}
 			}
-			return $this->handleError($err_message, $err_code, $err_retryable, $err_details, $parameters);
-		} else {
-			if ($parameters['array']) {
-				$parsed_array = json_decode(json_encode($parsed), true);
-				return $parsed_array['data'];
-			} else {
-				return $parsed->data;
-			}
+			return $this->handleError($err_message, $err_code, $err_retryable, $err_details, $parameters, $response_data);
 		}
+		return $response_data;
 	}
 
 	/** takes an associative array $config as argument
